@@ -52,6 +52,20 @@ class shutit_k3s_istio(ShutItModule):
       vb.name = "shutit_k3s_istio_3"
     end
   end
+  config.vm.define "machine4" do |machine4|
+    machine4.vm.box = ''' + '"' + vagrant_image + '"' + '''
+    machine4.vm.hostname = "machine4.vagrant.test"
+    machine4.vm.provider :virtualbox do |vb|
+      vb.name = "shutit_k3s_istio_4"
+    end
+  end
+  config.vm.define "machine5" do |machine5|
+    machine5.vm.box = ''' + '"' + vagrant_image + '"' + '''
+    machine5.vm.hostname = "machine5.vagrant.test"
+    machine5.vm.provider :virtualbox do |vb|
+      vb.name = "shutit_k3s_istio_5"
+    end
+  end
 end''')
 
 		# machines is a dict of dicts containing information about each machine for you to use.
@@ -59,6 +73,8 @@ end''')
 		machines.update({'machine1':{'fqdn':'machine1.vagrant.test'}})
 		machines.update({'machine2':{'fqdn':'machine2.vagrant.test'}})
 		machines.update({'machine3':{'fqdn':'machine3.vagrant.test'}})
+		machines.update({'machine4':{'fqdn':'machine4.vagrant.test'}})
+		machines.update({'machine5':{'fqdn':'machine5.vagrant.test'}})
 
 		try:
 			pw = open('secret').read().strip()
@@ -129,32 +145,50 @@ echo "
 /swapfile none            swap    sw              0       0" >> /etc/fstab''')
 			shutit_session.multisend('adduser person',{'password:':'person','Enter new UNIX password':'person','Retype new UNIX password:':'person','Full Name':'','Phone':'','Room':'','Other':'','Is the information correct':'Y'})
 
+		# https://tferdinand.net/en/create-a-local-kubernetes-cluster-with-vagrant/
+		# Set up IPs
+		machine1_ip = machines['machine1']['ip']
+		machine2_ip = machines['machine2']['ip']
+		machine3_ip = machines['machine3']['ip']
+		machine4_ip = machines['machine4']['ip']
+		machine5_ip = machines['machine5']['ip']
+
 		for machine in sorted(machines.keys()):
-			shutit_session = shutit_sessions[machine]
-			shutit_session.send('apt update -y')
-			shutit_session.send('apt install apt-transport-https ca-certificates curl software-properties-common -y')
-			shutit_session.send('curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -')
-			shutit_session.send('add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"')
-			shutit_session.send('apt update -y')
-			shutit_session.send('apt install docker-ce -y')
+			for machine_k in sorted(machines.keys()):
+				shutit_session = shutit_sessions[machine]
+				shutit_session.send('echo ' + machines[machine_k]['ip'] + ' ' + machine_k + ' ' + machines[machine_k]['fqdn'] + ' >> /etc/hosts')
 
-
-		for machine in ('machine2','machine3'):
-			shutit_session = shutit_sessions[machine]
-			shutit_session.send('curl -sfL https://get.k3s.io | sh -s - --docker')
-			k3s_token = shutit_session.send_and_get_output('cat /var/lib/rancher/k3s/server/node-token')
-			shutit_session.send('curl -sfL http://get.k3s.io | K3S_URL=https://' + machines['machine1']['ip'] + ':6443 K3S_TOKEN=' + k3s_token + ' sh -s - --docker')
-
+		# Set up first master
 		shutit_session = shutit_sessions['machine1']
-		shutit_session.send('curl -sfL https://get.k3s.io | sh -s - --docker')
+		#shutit_session.send('''curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--cluster-init --no-deploy servicelb --no-deploy traefik --tls-san $(hostname) --advertise-address ''' + machine1_ip + ''' --bind-address ''' + machine1_ip + ''' --node-ip ''' + machine1_ip + '''" sh -''')
+		shutit_session.send('''curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--cluster-init --flannel-iface enp0s8 --no-deploy traefik --tls-san $(hostname) --advertise-address ''' + machine1_ip + ''' --bind-address ''' + machine1_ip + ''' --node-ip ''' + machine1_ip + '''" sh -''')
+		shutit_session.send('sleep 15')
+		#shutit_session.send('kubectl taint --overwrite node $(hostname) node-role.kubernetes.io/master=true:NoSchedule')
 		k3s_token = shutit_session.send_and_get_output('cat /var/lib/rancher/k3s/server/node-token')
 		shutit_session.send('mkdir -p ~/.kube')
 		shutit_session.send('cp /etc/rancher/k3s/k3s.yaml ~/.kube/config')
+
+		for machine in ('machine2','machine3'):
+			shutit_session = shutit_sessions[machine]
+			machine_ip = machines[machine]['ip']
+			#shutit_session.send('''curl -sfL http://get.k3s.io | INSTALL_K3S_EXEC="server --no-deploy servicelb --no-deploy traefik --server https://machine1:6443 --token ''' + k3s_token + ''' --tls-san $(hostname) --bind-address ''' + machine_ip + ''' --advertise-address ''' + machine_ip + ''' --node-ip ''' + machine_ip + '''" sh -''')
+			shutit_session.send('''curl -sfL http://get.k3s.io | INSTALL_K3S_EXEC="server --flannel-iface enp0s8 --no-deploy traefik --server https://machine1:6443 --token ''' + k3s_token + ''' --tls-san $(hostname) --bind-address ''' + machine_ip + ''' --advertise-address ''' + machine_ip + ''' --node-ip ''' + machine_ip + '''" sh -''')
+			shutit_session.send('sleep 15')
+			#shutit_session.send('kubectl taint --overwrite node $(hostname) node-role.kubernetes.io/master=true:NoSchedule')
+
+		for machine in ('machine4','machine5'):
+			shutit_session = shutit_sessions[machine]
+			machine_ip = machines[machine]['ip']
+			shutit_session.send('curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent --flannel-iface enp0s8 --server https://machine1:6443 --token ' + k3s_token + ' --node-ip ' + machine_ip + '" sh -')
+
+		# Set up k9s
+		shutit_session = shutit_sessions['machine1']
 		shutit_session.send('cd /tmp')
 		shutit_session.send('wget https://github.com/derailed/k9s/releases/download/v0.24.15/k9s_Linux_x86_64.tar.gz')
 		shutit_session.send('tar -zxvf k9s_Linux_x86_64.tar.gz')
 		shutit_session.send('mv k9s /usr/bin/k9s')
 		shutit_session.send('cd -')
+		# Set up istio
 		shutit_session.send('curl -sL https://istio.io/downloadIstioctl | sh -')
 		shutit_session.add_to_bashrc('export PATH=$PATH:$HOME/.istioctl/bin')
 		shutit_session.add_to_bashrc('export KUBECONFIG=~/.kube/config')
@@ -174,6 +208,8 @@ spec:
 EOF''')
 		# Label the default namespace for istio injection
 		shutit_session.send('kubectl label namespace default istio-injection=enabled')
+		# TODO: determine when everything is ready rather than just wait
+		shutit_session.send('sleep 120')
 		# Set up httpbin application
 		shutit_session.send('kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.11/samples/httpbin/httpbin.yaml')
 		# Configure ingress gateway
@@ -185,9 +221,13 @@ metadata:
 spec:
   selector:
     istio: ingressgateway # use Istio default gateway implementation
-  - port:                                                                                                            number: 80
-      name: http                                                                                                     protocol: HTTP
-    hosts:                                                                                                         - "httpbin.example.com"
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "httpbin.example.com"
 EOF''')
 		# Configure Istio service
 		shutit_session.send('''kubectl apply -f - <<EOF
@@ -212,11 +252,12 @@ spec:
           number: 8000
         host: httpbin
 EOF''')
-		shutit_session.send("""export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports me=="http2")].nodePort}'""")
+		shutit_session.send("""export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}')""")
 		shutit_session.send("""export SECURE_INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}')""")
 		shutit_session.send("""export TCP_INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="tcp")].nodePort}')""")
 		shutit_session.send("""export INGRESS_HOST=$(kubectl get po -l istio=ingressgateway -n istio-system -o jsonpath='{.items[0].status.hostIP}')""")
-		shutit.send('curl -s -I -HHost:httpbin.example.com "http://$INGRESS_HOST:$INGRESS_PORT/status/200"')
+		shutit_session.send('curl -s -I -HHost:httpbin.example.com "http://$INGRESS_HOST:$INGRESS_PORT/status/200"')
+		shutit_session.pause_point('END')
 
 		return True
 

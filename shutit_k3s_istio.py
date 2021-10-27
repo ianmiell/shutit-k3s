@@ -153,6 +153,7 @@ echo "
 		machine4_ip = machines['machine4']['ip']
 		machine5_ip = machines['machine5']['ip']
 
+		# Set up /etc/hosts
 		for machine in sorted(machines.keys()):
 			for machine_k in sorted(machines.keys()):
 				shutit_session = shutit_sessions[machine]
@@ -160,10 +161,8 @@ echo "
 
 		# Set up first master
 		shutit_session = shutit_sessions['machine1']
-		#shutit_session.send('''curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--cluster-init --no-deploy servicelb --no-deploy traefik --tls-san $(hostname) --advertise-address ''' + machine1_ip + ''' --bind-address ''' + machine1_ip + ''' --node-ip ''' + machine1_ip + '''" sh -''')
+		# no traefik because we are using istio ingress, flannel iface and the other ip references to make it go to the right ip address
 		shutit_session.send('''curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--cluster-init --flannel-iface enp0s8 --no-deploy traefik --tls-san $(hostname) --advertise-address ''' + machine1_ip + ''' --bind-address ''' + machine1_ip + ''' --node-ip ''' + machine1_ip + '''" sh -''')
-		shutit_session.send('sleep 15')
-		#shutit_session.send('kubectl taint --overwrite node $(hostname) node-role.kubernetes.io/master=true:NoSchedule')
 		k3s_token = shutit_session.send_and_get_output('cat /var/lib/rancher/k3s/server/node-token')
 		shutit_session.send('mkdir -p ~/.kube')
 		shutit_session.send('cp /etc/rancher/k3s/k3s.yaml ~/.kube/config')
@@ -171,10 +170,7 @@ echo "
 		for machine in ('machine2','machine3'):
 			shutit_session = shutit_sessions[machine]
 			machine_ip = machines[machine]['ip']
-			#shutit_session.send('''curl -sfL http://get.k3s.io | INSTALL_K3S_EXEC="server --no-deploy servicelb --no-deploy traefik --server https://machine1:6443 --token ''' + k3s_token + ''' --tls-san $(hostname) --bind-address ''' + machine_ip + ''' --advertise-address ''' + machine_ip + ''' --node-ip ''' + machine_ip + '''" sh -''')
 			shutit_session.send('''curl -sfL http://get.k3s.io | INSTALL_K3S_EXEC="server --flannel-iface enp0s8 --no-deploy traefik --server https://machine1:6443 --token ''' + k3s_token + ''' --tls-san $(hostname) --bind-address ''' + machine_ip + ''' --advertise-address ''' + machine_ip + ''' --node-ip ''' + machine_ip + '''" sh -''')
-			shutit_session.send('sleep 15')
-			#shutit_session.send('kubectl taint --overwrite node $(hostname) node-role.kubernetes.io/master=true:NoSchedule')
 
 		for machine in ('machine4','machine5'):
 			shutit_session = shutit_sessions[machine]

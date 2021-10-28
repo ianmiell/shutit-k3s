@@ -105,4 +105,45 @@ def run(shutit_sessions, machines):
 	shutit_session.send("""export TCP_INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="tcp")].nodePort}')""")
 	shutit_session.send("""export INGRESS_HOST=$(kubectl get po -l istio=ingressgateway -n istio-system -o jsonpath='{.items[0].status.hostIP}')""")
 	shutit_session.send('curl -s -I -HHost:httpbin.example.com "http://$INGRESS_HOST:$INGRESS_PORT/status/200"')
+
+	# Create simple deployment
+	shutit_session.send('kubectl apply -f https://raw.githubusercontent.com/ContainerSolutions/kubernetes-examples/master/Deployment/webserver.yaml')
+	# Create Gateway and VirtualService
+	shutit_session.send(('kubectl apply -f - <<EOF\n'
+	                     'apiVersion: networking.istio.io/v1beta1\n'
+	                     'kind: Gateway\n'
+	                     'metadata:\n'
+	                     '  name: webserver-simple-service-gateway\n'
+	                     '  namespace: default\n'
+	                     'spec:\n'
+	                     '  selector:\n'
+	                     '    istio: ingressgateway\n'
+	                     '  servers:\n'
+	                     '  - hosts:\n'
+	                     '    - webserver-simple-service.com\n'
+	                     '    port:\n'
+	                     '      name: http\n'
+	                     '      number: 80\n'
+	                     '      protocol: HTTP\n'
+	                     '---\n'
+	                     'apiVersion: networking.istio.io/v1beta1\n'
+	                     'kind: VirtualService\n'
+	                     'metadata:\n'
+	                     '  name: webserver-simple-service-virtual-service\n'
+	                     '  namespace: default\n'
+	                     'spec:\n'
+	                     '  gateways:\n'
+	                     '  - webserver-simple-service-gateway  # Matches the gateway defined above\n'
+	                     '  hosts:\n'
+	                     '  - webserver-simple-service.com  # Matches the host defined above\n'
+	                     '  http:\n'
+	                     '  - match:\n'
+	                     '    - uri:\n'
+	                     '        prefix: /\n'
+	                     '    route:\n'
+	                     '    - destination:\n'
+	                     '        host: webserver-simple-service\n'
+	                     '        port:\n'
+	                     '          number: 80  # Matches the port of the service'))
+	shutit_session.send('curl -HHost:webserver-simple-service.com "http://$INGRESS_HOST:$INGRESS_PORT/"')
 	shutit_session.pause_point('END')

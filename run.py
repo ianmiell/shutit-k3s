@@ -46,4 +46,8 @@ def run(shutit_sessions, machines):
 	# Set up kustomize
 	shutit_session.send('curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash')
 	shutit_session.send('mv /root/kustomize /usr/bin')
+	# Set up helm
+	shutit_session.send('wget https://get.helm.sh/helm-v3.7.1-linux-amd64.tar.gz')
+	shutit_session.send('tar -zxvf helm-v3.7.1-linux-amd64.tar.gz')
+	shutit_session.send('mv ./linux-amd64/helm /usr/bin')
 	shutit_session.pause_point('END')

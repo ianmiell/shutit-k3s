@@ -37,13 +37,13 @@ def run(shutit_sessions, machines):
 	shutit_session.send('tar -zxvf k9s_Linux_x86_64.tar.gz')
 	shutit_session.send('mv k9s /usr/bin/k9s')
 	shutit_session.send('cd -')
-	import istio_in_action
 	import crossplane
+	import istio_in_action
 	import kube_monkey
 	import rook
 	import shell_operator
+	crossplane.run(shutit_sessions, machines)
 	#istio_in_action.run(shutit_sessions, machines)
-	#crossplane.run(shutit_sessions, machines)
 	#kube_monkey.run(shutit_sessions, machines)
 	#rook.run(shutit_sessions, machines)
 	#shell_operator.run(shutit_sessions, machines)

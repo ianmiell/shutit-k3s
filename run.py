@@ -41,6 +41,7 @@ def run(shutit_sessions, machines):
 	shutit_session.send('tar -zxvf k9s_Linux_x86_64.tar.gz')
 	shutit_session.send('mv k9s /usr/bin/k9s')
 	shutit_session.send('cd -')
+<<<<<<< HEAD
 	# Set up kustomize
 	shutit_session.send('curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash')
 	shutit_session.send('mv /root/kustomize /usr/bin')
@@ -79,6 +80,7 @@ def run(shutit_sessions, machines):
 	#crossplane.run(shutit_sessions, machines)
 	#ingress.run(shutit_sessions, machines)
 	#istio_egress.run(shutit_sessions, machines)
+	#istio_in_action.run(shutit_sessions, machines)
 	#keepalived_operator.run(shutit_sessions, machines)
 	#kube_monkey.run(shutit_sessions, machines)
 	#kubevirt.run(shutit_sessions, machines)

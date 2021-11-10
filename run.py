@@ -50,4 +50,10 @@ def run(shutit_sessions, machines):
 	shutit_session.send('wget https://get.helm.sh/helm-v3.7.1-linux-amd64.tar.gz')
 	shutit_session.send('tar -zxvf helm-v3.7.1-linux-amd64.tar.gz')
 	shutit_session.send('mv ./linux-amd64/helm /usr/bin')
+
+	# install rancher istio
+	shutit_session.send('helm repo add rancher-charts https://raw.githubusercontent.com/rancher/charts/release-v2.5/')
+	shutit_session.send('helm repo update')
+	shutit_session.send('helm pull rancher-charts/rancher-istio')
+	shutit_session.pause_point('helm install rancher-istio*tgz')
 	shutit_session.pause_point('END')

@@ -37,14 +37,22 @@ def run(shutit_sessions, machines):
 	shutit_session.send('tar -zxvf k9s_Linux_x86_64.tar.gz')
 	shutit_session.send('mv k9s /usr/bin/k9s')
 	shutit_session.send('cd -')
-	import istio_in_action
+	# Set up kustomize
+	shutit_session.send('curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash')
+	shutit_session.send('mv /root/kustomize /usr/bin')
+	# Set up helm
+	shutit_session.send('wget https://get.helm.sh/helm-v3.7.1-linux-amd64.tar.gz')
+	shutit_session.send('tar -zxvf helm-v3.7.1-linux-amd64.tar.gz')
+	shutit_session.send('mv ./linux-amd64/helm /usr/bin')
+	shutit_session.send('rm helm-*gz')
 	import crossplane
+	import istio_in_action
 	import kube_monkey
 	import rook
 	import shell_operator
-	#istio_in_action.run(shutit_sessions, machines)
 	#crossplane.run(shutit_sessions, machines)
-	#kube_monkey.run(shutit_sessions, machines)
+	#istio_in_action.run(shutit_sessions, machines)
+	kube_monkey.run(shutit_sessions, machines)
 	#rook.run(shutit_sessions, machines)
 	#shell_operator.run(shutit_sessions, machines)
 	shutit_session.pause_point('END OF ALL MODULES')

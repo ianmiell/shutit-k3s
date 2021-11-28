@@ -38,5 +38,7 @@ def run(shutit_sessions, machines):
 	shutit_session.send('cd -')
 	import istio_in_action
 	import crossplane
+	import kube_monkey
 	#istio_in_action.run(shutit_sessions, machines)
 	#crossplane.run(shutit_sessions, machines)
+	#kube_monkey.run(shutit_sessions, machines)

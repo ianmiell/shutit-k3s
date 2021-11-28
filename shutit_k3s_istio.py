@@ -29,11 +29,6 @@ class shutit_k3s_istio(ShutItModule):
   config.vm.provider "virtualbox" do |vb|
     vb.gui = ''' + gui + '''
     vb.memory = "''' + memory + '''"
-    file_to_disk = "disk2.vdi"
-    unless File.exist?(file_to_disk)
-      vb.customize ['createhd', '--size', 10 * 1024, '--filename', file_to_disk]
-    end
-    vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
   end
 
   config.vm.define "machine1" do |machine1|
@@ -43,6 +38,12 @@ class shutit_k3s_istio(ShutItModule):
     machine1.vm.provider :virtualbox do |vb|
       vb.name = "shutit_k3s_istio_1"
       vb.memory = 4096
+      # https://github.com/hashicorp/vagrant/issues/9794
+      file_to_disk = "disk2_1.vdi"
+      unless File.exist?(file_to_disk)
+        vb.customize ['createhd', '--size', 10 * 1024, '--filename', file_to_disk]
+      end
+      vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
     end
   end
   config.vm.define "machine2" do |machine2|
@@ -52,6 +53,12 @@ class shutit_k3s_istio(ShutItModule):
     machine2.vm.provider :virtualbox do |vb|
       vb.name = "shutit_k3s_istio_2"
       vb.memory = 4096
+      # https://github.com/hashicorp/vagrant/issues/9794
+      file_to_disk = "disk2_2.vdi"
+      unless File.exist?(file_to_disk)
+        vb.customize ['createhd', '--size', 10 * 1024, '--filename', file_to_disk]
+      end
+      vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
     end
   end
   config.vm.define "machine3" do |machine3|

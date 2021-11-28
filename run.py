@@ -39,6 +39,9 @@ def run(shutit_sessions, machines):
 	import istio_in_action
 	import crossplane
 	import kube_monkey
+	import shell_operator
 	#istio_in_action.run(shutit_sessions, machines)
 	#crossplane.run(shutit_sessions, machines)
 	#kube_monkey.run(shutit_sessions, machines)
+	#shell_operator.run(shutit_sessions, machines)
+

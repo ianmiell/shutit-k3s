@@ -3,6 +3,7 @@ def run(shutit_sessions, machines):
 	# TODO: implement: https://documentation.suse.com/sbp/all/html/SBP-rook-ceph-kubernetes/index.html#sec-limit-ceph-specifc-nodes
 	# Set up rook https://rook.io/docs/rook/v1.7/quickstart.html
 	shutit_session.send('git clone --single-branch --branch v1.7.8 https://github.com/rook/rook.git')
+<<<<<<< HEAD
 	shutit_session.send('cd rook/cluster/examples')
 	shutit_session.send('helm repo add rook-release https://charts.rook.io/release')
 	shutit_session.send('helm install --create-namespace --namespace rook-ceph rook-ceph rook-release/rook-ceph')
@@ -91,16 +92,10 @@ EOF
 )''')
 	shutit_session.send_until("kubectl get cephcluster -n rook-ceph -o json | jq '.items[0].status.phase'", '"Ready"', cadence=30)
 =======
-   23  git clone --single-branch --branch v1.7.8 https://github.com/rook/rook.git
-   24  cd rook/cluster/examples/kubernetes/ceph
-   25  kubectl create -f crds.yaml -f common.yaml -f operator.yaml
-   26  kubectl create -f cluster.yaml
->>>>>>> 8472f3e... helm
-=======
+>>>>>>> 7210fef... latest
 	shutit_session.send('cd rook/cluster/examples/kubernetes/ceph')
 	shutit_session.send('kubectl create -f crds.yaml -f common.yaml -f operator.yaml')
 	shutit_session.send('kubectl create -f cluster.yaml')
->>>>>>> 7210fef... latest
 	# Create the toolbox
 	shutit_session.send('''kubectl create -f <(cat << EOF
 apiVersion: apps/v1
@@ -158,8 +153,6 @@ spec:
           effect: "NoExecute"
           tolerationSeconds: 5
 EOF
-<<<<<<< HEAD
-<<<<<<< HEAD
 )''')
 	shutit_session.send_until('kubectl -n rook-ceph rollout status deploy/rook-ceph-tools | grep successfully.rolled.out | wc -l', '1')
 	shutit_session.login(command='kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- bash')
@@ -211,4 +204,7 @@ EOF
 	# As an example, we will start the kube-registry pod with the shared filesystem as the backing store.
 	# If you’ve deployed the Rook operator in a namespace other than 'rook-ceph' as is common change the prefix in the provisioner to match the namespace you used. For example, if the Rook operator is running in 'rook-op' the provisioner value should be “rook-op.rbd.csi.ceph.com”.
 	shutit_session.send('kubectl create -f kubernetes/ceph/csi/cephfs/kube-registry.yaml')
+	shutit_session.send_until('kubectl -n rook-ceph rollout status deploy/rook-ceph-tools | grep successfully.rolled.out | wc -l', '1')
+#kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- bash
+#wait a long time
 	shutit_session.pause_point('ROOK END')

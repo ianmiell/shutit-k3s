@@ -2,4 +2,5 @@
 vagrant_run
 secret
 dockerpass
+aws.sh
 gcp.json

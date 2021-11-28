@@ -44,6 +44,7 @@ class shutit_k3s_istio(ShutItModule):
     machine2.vm.hostname = "machine2.vagrant.test"
     machine2.vm.provider :virtualbox do |vb|
       vb.name = "shutit_k3s_istio_2"
+      vb.memory = 4096
     end
   end
   config.vm.define "machine3" do |machine3|
@@ -51,6 +52,7 @@ class shutit_k3s_istio(ShutItModule):
     machine3.vm.hostname = "machine3.vagrant.test"
     machine3.vm.provider :virtualbox do |vb|
       vb.name = "shutit_k3s_istio_3"
+      vb.memory = 4096
     end
   end
   config.vm.define "machine4" do |machine4|
@@ -58,6 +60,7 @@ class shutit_k3s_istio(ShutItModule):
     machine4.vm.hostname = "machine4.vagrant.test"
     machine4.vm.provider :virtualbox do |vb|
       vb.name = "shutit_k3s_istio_4"
+      vb.memory = 16384
     end
   end
   config.vm.define "machine5" do |machine5|
@@ -65,6 +68,15 @@ class shutit_k3s_istio(ShutItModule):
     machine5.vm.hostname = "machine5.vagrant.test"
     machine5.vm.provider :virtualbox do |vb|
       vb.name = "shutit_k3s_istio_5"
+      vb.memory = 4096
+    end
+  end
+  config.vm.define "machine6" do |machine6|
+    machine6.vm.box = ''' + '"' + vagrant_image + '"' + '''
+    machine6.vm.hostname = "machine6.vagrant.test"
+    machine6.vm.provider :virtualbox do |vb|
+      vb.name = "shutit_k3s_istio_6"
+      vb.memory = 1024
     end
   end
 end''')
@@ -76,6 +88,7 @@ end''')
 		machines.update({'machine3':{'fqdn':'machine3.vagrant.test'}})
 		machines.update({'machine4':{'fqdn':'machine4.vagrant.test'}})
 		machines.update({'machine5':{'fqdn':'machine5.vagrant.test'}})
+		machines.update({'machine6':{'fqdn':'machine6.vagrant.test'}})
 
 		try:
 			pw = open('secret').read().strip()

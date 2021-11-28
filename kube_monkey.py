@@ -1,10 +1,5 @@
 def run(shutit_sessions, machines):
-	machine1_ip = machines['machine1']['ip']
-	machine2_ip = machines['machine2']['ip']
-	machine3_ip = machines['machine3']['ip']
-	machine4_ip = machines['machine4']['ip']
-	machine5_ip = machines['machine5']['ip']
-
+	shutit_session = shutit_sessions['machine1']
 	# Set up kube-monkey
 	shutit_session.send('helm repo add kubemonkey https://asobti.github.io/kube-monkey/charts/repo && helm repo update')
 	shutit_session.send('helm install my-release kubemonkey/kube-monkey --version 1.4.0')

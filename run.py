@@ -4,6 +4,7 @@ def run(shutit_sessions, machines):
 	machine3_ip = machines['machine3']['ip']
 	machine4_ip = machines['machine4']['ip']
 	machine5_ip = machines['machine5']['ip']
+	machine6_ip = machines['machine6']['ip']
 
 	# Set up /etc/hosts
 	for machine in sorted(machines.keys()):
@@ -24,7 +25,7 @@ def run(shutit_sessions, machines):
 		machine_ip = machines[machine]['ip']
 		shutit_session.send('''curl -sfL http://get.k3s.io | INSTALL_K3S_EXEC="server --flannel-iface enp0s8 --no-deploy traefik --server https://machine1:6443 --token ''' + k3s_token + ''' --tls-san $(hostname) --bind-address ''' + machine_ip + ''' --advertise-address ''' + machine_ip + ''' --node-ip ''' + machine_ip + '''" sh -''')
 
-	for machine in ('machine4','machine5'):
+	for machine in ('machine4','machine5','machine6'):
 		shutit_session = shutit_sessions[machine]
 		machine_ip = machines[machine]['ip']
 		shutit_session.send('curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent --flannel-iface enp0s8 --server https://machine1:6443 --token ' + k3s_token + ' --node-ip ' + machine_ip + '" sh -')

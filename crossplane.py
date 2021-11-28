@@ -1,10 +1,5 @@
 def run(shutit_sessions, machines):
-	machine1_ip = machines['machine1']['ip']
-	machine2_ip = machines['machine2']['ip']
-	machine3_ip = machines['machine3']['ip']
-	machine4_ip = machines['machine4']['ip']
-	machine5_ip = machines['machine5']['ip']
-
+	shutit_session = shutit_sessions['machine1']
 	# Set up crossplane
 	shutit_session.send('kubectl create namespace crossplane-system')
 	shutit_session.send('helm repo add crossplane-stable https://charts.crossplane.io/stable')

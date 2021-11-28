@@ -45,4 +45,4 @@ def run(shutit_sessions, machines):
 	#crossplane.run(shutit_sessions, machines)
 	#kube_monkey.run(shutit_sessions, machines)
 	#shell_operator.run(shutit_sessions, machines)
-
+	shutit_pause_point('END OF ALL MODULES')

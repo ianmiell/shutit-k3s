@@ -46,4 +46,3 @@ EOF''')
 	shutit_session.send('kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/aio/deploy/recommended.yaml')
 	# Now run kubectl -n example-monitor-pods logs po/shell-operator and observe that the hook will print dashboard pod name:
 	shutit_session.send('sleep 10 && kubectl -n example-monitor-pods logs po/shell-operator')
-	shutit_session.pause_point('END')

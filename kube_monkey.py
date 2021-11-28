@@ -33,4 +33,3 @@ metadata:
 EOF
 )''')
 	shutit_session.send('kubectl rollout restart deployment my-release-kube-monkey')
-	shutit_session.pause_point('END')

@@ -36,6 +36,7 @@ class shutit_k3s_istio(ShutItModule):
     machine1.vm.hostname = "machine1.vagrant.test"
     machine1.vm.provider :virtualbox do |vb|
       vb.name = "shutit_k3s_istio_1"
+      vb.memory = 4096
     end
   end
   config.vm.define "machine2" do |machine2|

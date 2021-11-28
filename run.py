@@ -29,26 +29,14 @@ def run(shutit_sessions, machines):
 		machine_ip = machines[machine]['ip']
 		shutit_session.send('curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent --flannel-iface enp0s8 --server https://machine1:6443 --token ' + k3s_token + ' --node-ip ' + machine_ip + '" sh -')
 
-	################################################################################
-	# Go to main host
-	shutit_session = shutit_sessions['machine1']
-	################################################################################
-	# Set up kubeconfig
-	shutit_session.add_to_bashrc('export KUBECONFIG=~/.kube/config')
-	shutit_session.send('export KUBECONFIG=~/.kube/config')
-	################################################################################
 	# Set up k9s
+	shutit_session = shutit_sessions['machine1']
 	shutit_session.send('cd /tmp')
 	shutit_session.send('wget https://github.com/derailed/k9s/releases/download/v0.24.15/k9s_Linux_x86_64.tar.gz')
 	shutit_session.send('tar -zxvf k9s_Linux_x86_64.tar.gz')
 	shutit_session.send('mv k9s /usr/bin/k9s')
 	shutit_session.send('cd -')
-	# Set up kustomize
-	shutit_session.send('curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash')
-	shutit_session.send('mv /root/kustomize /usr/bin')
-	# Set up helm
-	shutit_session.send('wget https://get.helm.sh/helm-v3.7.1-linux-amd64.tar.gz')
-	shutit_session.send('tar -zxvf helm-v3.7.1-linux-amd64.tar.gz')
-	shutit_session.send('mv ./linux-amd64/helm /usr/bin')
-	shutit_session.send('rm helm-*gz')
-	shutit_session.pause_point('END')
+	import istio_in_action
+	import crossplane
+	#istio_in_action.run(shutit_sessions, machines)
+	#crossplane.run(shutit_sessions, machines)

@@ -29,11 +29,17 @@ class shutit_k3s_istio(ShutItModule):
   config.vm.provider "virtualbox" do |vb|
     vb.gui = ''' + gui + '''
     vb.memory = "''' + memory + '''"
+    file_to_disk = "disk2.vdi"
+    unless File.exist?(file_to_disk)
+      vb.customize ['createhd', '--size', 10 * 1024, '--filename', file_to_disk]
+    end
+    vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
   end
 
   config.vm.define "machine1" do |machine1|
     machine1.vm.box = ''' + '"' + vagrant_image + '"' + '''
     machine1.vm.hostname = "machine1.vagrant.test"
+    machine1.vm.disk :disk, name: "rook", size: "1024"
     machine1.vm.provider :virtualbox do |vb|
       vb.name = "shutit_k3s_istio_1"
       vb.memory = 4096
@@ -42,6 +48,7 @@ class shutit_k3s_istio(ShutItModule):
   config.vm.define "machine2" do |machine2|
     machine2.vm.box = ''' + '"' + vagrant_image + '"' + '''
     machine2.vm.hostname = "machine2.vagrant.test"
+    machine2.vm.disk :disk, name: "rook", size: "1024"
     machine2.vm.provider :virtualbox do |vb|
       vb.name = "shutit_k3s_istio_2"
       vb.memory = 4096
@@ -50,6 +57,7 @@ class shutit_k3s_istio(ShutItModule):
   config.vm.define "machine3" do |machine3|
     machine3.vm.box = ''' + '"' + vagrant_image + '"' + '''
     machine3.vm.hostname = "machine3.vagrant.test"
+    machine3.vm.disk :disk, name: "rook", size: "1024"
     machine3.vm.provider :virtualbox do |vb|
       vb.name = "shutit_k3s_istio_3"
       vb.memory = 4096
@@ -58,6 +66,7 @@ class shutit_k3s_istio(ShutItModule):
   config.vm.define "machine4" do |machine4|
     machine4.vm.box = ''' + '"' + vagrant_image + '"' + '''
     machine4.vm.hostname = "machine4.vagrant.test"
+    machine4.vm.disk :disk, name: "rook", size: "1024"
     machine4.vm.provider :virtualbox do |vb|
       vb.name = "shutit_k3s_istio_4"
       vb.memory = 16384
@@ -66,6 +75,7 @@ class shutit_k3s_istio(ShutItModule):
   config.vm.define "machine5" do |machine5|
     machine5.vm.box = ''' + '"' + vagrant_image + '"' + '''
     machine5.vm.hostname = "machine5.vagrant.test"
+    machine5.vm.disk :disk, name: "rook", size: "1024"
     machine5.vm.provider :virtualbox do |vb|
       vb.name = "shutit_k3s_istio_5"
       vb.memory = 4096
@@ -74,6 +84,7 @@ class shutit_k3s_istio(ShutItModule):
   config.vm.define "machine6" do |machine6|
     machine6.vm.box = ''' + '"' + vagrant_image + '"' + '''
     machine6.vm.hostname = "machine6.vagrant.test"
+    machine6.vm.disk :disk, name: "rook", size: "1024"
     machine6.vm.provider :virtualbox do |vb|
       vb.name = "shutit_k3s_istio_6"
       vb.memory = 1024

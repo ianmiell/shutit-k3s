@@ -84,8 +84,12 @@ def run(shutit_sessions, machines):
 	#istio_in_action.run(shutit_sessions, machines)
 	#keepalived_operator.run(shutit_sessions, machines)
 	#kube_monkey.run(shutit_sessions, machines)
+<<<<<<< HEAD
 	#kubevirt.run(shutit_sessions, machines)
 	#mutating_webhook.run(shutit_sessions, machines)
 	#rook.run(shutit_sessions, machines)
+=======
+	rook.run(shutit_sessions, machines)
+>>>>>>> 890f0ba... on
 	#shell_operator.run(shutit_sessions, machines)
 	shutit_session.pause_point('END OF ALL MODULES')

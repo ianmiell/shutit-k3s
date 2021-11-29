@@ -6,11 +6,12 @@ def run(shutit_sessions, machines):
 	machine5_ip = machines['machine5']['ip']
 	machine6_ip = machines['machine6']['ip']
 
-	# Set up /etc/hosts
+	# Set up /etc/hosts and other pre-requisties
 	for machine in sorted(machines.keys()):
 		for machine_k in sorted(machines.keys()):
 			shutit_session = shutit_sessions[machine]
 			shutit_session.send('echo ' + machines[machine_k]['ip'] + ' ' + machine_k + ' ' + machines[machine_k]['fqdn'] + ' >> /etc/hosts')
+			shutit_session.send('apt update -y && apt install -y ntp')
 
 	# Set up first master
 	shutit_session = shutit_sessions['machine1']

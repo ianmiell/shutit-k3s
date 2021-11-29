@@ -68,6 +68,12 @@ class shutit_k3s_istio(ShutItModule):
     machine3.vm.provider :virtualbox do |vb|
       vb.name = "shutit_k3s_istio_3"
       vb.memory = 4096
+      # https://github.com/hashicorp/vagrant/issues/9794
+      file_to_disk = "disk2_3.vdi"
+      unless File.exist?(file_to_disk)
+        vb.customize ['createhd', '--size', 10 * 1024, '--filename', file_to_disk]
+      end
+      vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
     end
   end
   config.vm.define "machine4" do |machine4|
@@ -75,6 +81,12 @@ class shutit_k3s_istio(ShutItModule):
     machine4.vm.hostname = "machine4.vagrant.test"
     machine4.vm.disk :disk, name: "rook", size: "1024"
     machine4.vm.provider :virtualbox do |vb|
+      # https://github.com/hashicorp/vagrant/issues/9794
+      file_to_disk = "disk2_4.vdi"
+      unless File.exist?(file_to_disk)
+        vb.customize ['createhd', '--size', 10 * 1024, '--filename', file_to_disk]
+      end
+      vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
       vb.name = "shutit_k3s_istio_4"
       vb.memory = 16384
     end
@@ -86,6 +98,12 @@ class shutit_k3s_istio(ShutItModule):
     machine5.vm.provider :virtualbox do |vb|
       vb.name = "shutit_k3s_istio_5"
       vb.memory = 4096
+      # https://github.com/hashicorp/vagrant/issues/9794
+      file_to_disk = "disk2_5.vdi"
+      unless File.exist?(file_to_disk)
+        vb.customize ['createhd', '--size', 10 * 1024, '--filename', file_to_disk]
+      end
+      vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
     end
   end
   config.vm.define "machine6" do |machine6|
@@ -95,6 +113,12 @@ class shutit_k3s_istio(ShutItModule):
     machine6.vm.provider :virtualbox do |vb|
       vb.name = "shutit_k3s_istio_6"
       vb.memory = 1024
+      # https://github.com/hashicorp/vagrant/issues/9794
+      file_to_disk = "disk2_6.vdi"
+      unless File.exist?(file_to_disk)
+        vb.customize ['createhd', '--size', 10 * 1024, '--filename', file_to_disk]
+      end
+      vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
     end
   end
 end''')

@@ -96,6 +96,11 @@ EOF
    25  kubectl create -f crds.yaml -f common.yaml -f operator.yaml
    26  kubectl create -f cluster.yaml
 >>>>>>> 8472f3e... helm
+=======
+	shutit_session.send('cd rook/cluster/examples/kubernetes/ceph')
+	shutit_session.send('kubectl create -f crds.yaml -f common.yaml -f operator.yaml')
+	shutit_session.send('kubectl create -f cluster.yaml')
+>>>>>>> 7210fef... latest
 	# Create the toolbox
 	shutit_session.send('''kubectl create -f <(cat << EOF
 apiVersion: apps/v1
@@ -153,6 +158,7 @@ spec:
           effect: "NoExecute"
           tolerationSeconds: 5
 EOF
+<<<<<<< HEAD
 <<<<<<< HEAD
 )''')
 	shutit_session.send_until('kubectl -n rook-ceph rollout status deploy/rook-ceph-tools | grep successfully.rolled.out | wc -l', '1')

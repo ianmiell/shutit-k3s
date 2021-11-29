@@ -62,7 +62,7 @@ spec:
           effect: "NoExecute"
           tolerationSeconds: 5
 EOF
-)'''
+)''')
 	shutit_session.send_until('kubectl -n rook-ceph rollout status deploy/rook-ceph-tools | grep successfully.rolled.out | wc -l', '1')
 #kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- bash
 #wait a long time

@@ -5,6 +5,20 @@ def run(shutit_sessions, machines):
 	shutit_session.send('cd rook/cluster/examples/kubernetes/ceph')
 	shutit_session.send('kubectl create -f crds.yaml -f common.yaml -f operator.yaml')
 	shutit_session.send('kubectl create -f cluster.yaml')
+	# Override security problem
+	shutit_session.send('''kubectl apply -f <(cat << EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rook-config-override
+  namespace: rook-ceph
+data:
+  config: |
+    [mon]
+    mon_warn_on_insecure_global_id_reclaim_allowed = false
+EOF
+)''')
+	shutit_session.send_until("kubectl get cephcluster -n rook-ceph -o json | jq '.items[0].status.phase' | wc -l", '"Ready"', cadence=30)
 	# Create the toolbox
 	shutit_session.send('''kubectl create -f <(cat << EOF
 apiVersion: apps/v1
@@ -63,20 +77,9 @@ spec:
           tolerationSeconds: 5
 EOF
 )''')
-	shutit_session.send('''kubectl apply -f <(cat << EOF
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: rook-config-override
-  namespace: rook-ceph
-data:
-  config: |
-    [mon]
-    mon_warn_on_insecure_global_id_reclaim_allowed = false
-EOF
-)''')
 	shutit_session.send_until('kubectl -n rook-ceph rollout status deploy/rook-ceph-tools | grep successfully.rolled.out | wc -l', '1')
 	shutit_session.login(command='kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- bash')
+	shutit_session.send('ceph status')
 	shutit_session.logout()
 	shutit_session.send('kubectl get cephcluster -A')
 	shutit_session.pause_point('ROOK END')

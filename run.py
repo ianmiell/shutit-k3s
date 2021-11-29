@@ -49,7 +49,6 @@ def run(shutit_sessions, machines):
 	shutit_session.send('tar -zxvf helm-v3.7.1-linux-amd64.tar.gz')
 	shutit_session.send('mv ./linux-amd64/helm /usr/bin')
 	shutit_session.send('rm helm-*gz')
-<<<<<<< HEAD
 
 	# Install krew
 	shutit_session.send(r'''(

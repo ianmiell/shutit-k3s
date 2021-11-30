@@ -2,9 +2,9 @@ def run(shutit_sessions, machines):
 	shutit_session = shutit_sessions['machine1']
 	# Set up rook https://rook.io/docs/rook/v1.7/quickstart.html
 	shutit_session.send('git clone --single-branch --branch v1.7.8 https://github.com/rook/rook.git')
-	shutit_session.send('cd rook/cluster/examples/kubernetes/ceph')
-	shutit_session.send('kubectl create -f crds.yaml -f common.yaml -f operator.yaml')
-	shutit_session.send('kubectl create -f cluster.yaml')
+	shutit_session.send('cd rook/cluster/examples')
+	shutit_session.send('kubectl create -f kubernetes/ceph/crds.yaml -f kubernetes/ceph/common.yaml -f kubernetes/ceph/operator.yaml')
+	shutit_session.send('kubectl create -f kubernetes/ceph/cluster.yaml')
 	# Override security problem
 	shutit_session.send('''kubectl apply -f <(cat << EOF
 apiVersion: v1
@@ -18,7 +18,7 @@ data:
     mon_warn_on_insecure_global_id_reclaim_allowed = false
 EOF
 )''')
-	shutit_session.send_until("kubectl get cephcluster -n rook-ceph -o json | jq '.items[0].status.phase' | wc -l", '"Ready"', cadence=30)
+	shutit_session.send_until("kubectl get cephcluster -n rook-ceph -o json | jq '.items[0].status.phase'", '"Ready"', cadence=30)
 	# Create the toolbox
 	shutit_session.send('''kubectl create -f <(cat << EOF
 apiVersion: apps/v1
@@ -79,7 +79,32 @@ EOF
 )''')
 	shutit_session.send_until('kubectl -n rook-ceph rollout status deploy/rook-ceph-tools | grep successfully.rolled.out | wc -l', '1')
 	shutit_session.login(command='kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- bash')
-	shutit_session.send('ceph status')
+	shutit_session.send_and_require('ceph status', '.*HEALTH_OK.*')
 	shutit_session.logout()
 	shutit_session.send('kubectl get cephcluster -A')
+	# Block store: https://rook.io/docs/rook/v1.7/ceph-block.html
+	shutit_session.send('kubectl create -f kubernetes/ceph/csi/rbd/storageclass.yaml')
+	shutit_session.send('kubectl create -f kubernetes/mysql.yaml')
+	shutit_session.send('kubectl create -f kubernetes/wordpress.yaml')
+	shutit_session.send('kubectl get pvc')
+	shutit_session.send('kubectl get svc wordpress')
+	# Object store: https://rook.io/docs/rook/v1.7/ceph-object.html
+	# The below sample will create a CephObjectStore that starts the RGW service in the cluster with an S3 API.  NOTE: This sample requires at least 3 bluestore OSDs, with each OSD located on a different node.  The OSDs must be located on different nodes, because the failureDomain is set to host and the erasureCoded chunk settings require at least 3 different OSDs (2 dataChunks + 1 codingChunks).  See the Object Store CRD, for more detail on the settings available for a CephObjectStore.
+	shutit_session.send('kubectl create -f kubernetes/ceph/object.yaml')
+	shutit_session.send_until('kubectl -n rook-ceph rollout status deploy/rook-ceph-rgw-my-store-a | grep successfully.rolled.out | wc -l', '1')
+	# Now that the object store is configured, next we need to create a bucket where a client can read and write objects. A bucket can be created by defining a storage class, similar to the pattern used by block and file storage. First, define the storage class that will allow object clients to create a bucket. The storage class defines the object storage system, the bucket retention policy, and other properties required by the administrator. Save the following as storageclass-bucket-delete.yaml (the example is named as such due to the Delete reclaim policy).
+	shutit_session.send('kubectl apply -f kubernetes/ceph/object.yaml')
+	# Based on this storage class, an object client can now request a bucket by creating an Object Bucket Claim (OBC). When the OBC is created, the Rook-Ceph bucket provisioner will create a new bucket. Notice that the OBC references the storage class that was created above. Save the following as object-bucket-claim-delete.yaml (the example is named as such due to the Delete reclaim policy):
+	shutit_session.send('kubectl apply -f kubernetes/ceph/storageclass-bucket-delete.yaml')
+	# Now that the claim is created, the operator will create the bucket as well as generate other artifacts to enable access to the bucket. A secret and ConfigMap are created with the same name as the OBC and in the same namespace. The secret contains credentials used by the application pod to access the bucket. The ConfigMap contains bucket endpoint information and is also consumed by the pod. See the Object Bucket Claim Documentation for more details on the CephObjectBucketClaims.
+	# Shared filesystem: https://rook.io/docs/rook/v1.7/ceph-filesystem.html
+	# Create the filesystem by specifying the desired settings for the metadata pool, data pools, and metadata server in the CephFilesystem CRD. In this example we create the metadata pool with replication of three and a single data pool with replication of three. For more options, see the documentation on creating shared filesystems.
+	shutit_session.send('kubectl create -f kubernetes/ceph/filesystem.yaml')
+	shutit_session.send_until('kubectl -n rook-ceph rollout status deploy/rook-ceph-mds-myfs-a | grep successfully.rolled.out | wc -l', '1')
+	shutit_session.send_until('kubectl -n rook-ceph rollout status deploy/rook-ceph-mds-myfs-b | grep successfully.rolled.out | wc -l', '1')
+	# Before Rook can start provisioning storage, a StorageClass needs to be created based on the filesystem. This is needed for Kubernetes to interoperate with the CSI driver to create persistent volumes.
+	shutit_session.send('kubectl create -f kubernetes/ceph/csi/cephfs/storageclass.yaml')
+	# As an example, we will start the kube-registry pod with the shared filesystem as the backing store.
+	# If you’ve deployed the Rook operator in a namespace other than 'rook-ceph' as is common change the prefix in the provisioner to match the namespace you used. For example, if the Rook operator is running in 'rook-op' the provisioner value should be “rook-op.rbd.csi.ceph.com”.
+	shutit_session.send('kubectl create -f kubernetes/ceph/csi/cephfs/kube-registry.yaml')
 	shutit_session.pause_point('ROOK END')

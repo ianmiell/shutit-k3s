@@ -112,7 +112,7 @@ class shutit_k3s_istio(ShutItModule):
     machine6.vm.disk :disk, name: "rook", size: "1024"
     machine6.vm.provider :virtualbox do |vb|
       vb.name = "shutit_k3s_istio_6"
-      vb.memory = 1024
+      vb.memory = 8192
       # https://github.com/hashicorp/vagrant/issues/9794
       file_to_disk = "disk2_6.vdi"
       unless File.exist?(file_to_disk)

@@ -8,10 +8,10 @@ def run(shutit_sessions, machines):
 
 	# Set up /etc/hosts and other pre-requisties
 	for machine in sorted(machines.keys()):
+		shutit_session = shutit_sessions[machine]
+		shutit_session.send('apt update -y && apt install -y ntp jq')
 		for machine_k in sorted(machines.keys()):
-			shutit_session = shutit_sessions[machine]
 			shutit_session.send('echo ' + machines[machine_k]['ip'] + ' ' + machine_k + ' ' + machines[machine_k]['fqdn'] + ' >> /etc/hosts')
-			shutit_session.send('apt update -y && apt install -y ntp jq')
 
 	# Set up first master
 	shutit_session = shutit_sessions['machine1']

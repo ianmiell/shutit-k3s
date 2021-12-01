@@ -1,10 +1,187 @@
 def run(shutit_sessions, machines):
 	shutit_session = shutit_sessions['machine1']
+	# TODO: implement: https://documentation.suse.com/sbp/all/html/SBP-rook-ceph-kubernetes/index.html#sec-limit-ceph-specifc-nodes
 	# Set up rook https://rook.io/docs/rook/v1.7/quickstart.html
+	shutit_session.send('kubectl label node machine4 storage-node=true')
+	shutit_session.send('kubectl label node machine5 storage-node=true')
+	shutit_session.send('kubectl label node machine6 storage-node=true')
 	shutit_session.send('git clone --single-branch --branch v1.7.8 https://github.com/rook/rook.git')
 	shutit_session.send('cd rook/cluster/examples')
-	shutit_session.send('kubectl create -f kubernetes/ceph/crds.yaml -f kubernetes/ceph/common.yaml -f kubernetes/ceph/operator.yaml')
-	shutit_session.send('kubectl create -f kubernetes/ceph/cluster.yaml')
+	shutit_session.send('kubectl create -f kubernetes/ceph/crds.yaml -f kubernetes/ceph/common.yaml')
+	shutit_session.send('''kubectl create -f <(cat << EOF
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: rook-ceph-operator-config
+  namespace: rook-ceph # namespace:operator
+data:
+  ROOK_LOG_LEVEL: "INFO"
+  ROOK_CSI_ENABLE_CEPHFS: "true"
+  ROOK_CSI_ENABLE_RBD: "true"
+  ROOK_CSI_ENABLE_GRPC_METRICS: "false"
+  CSI_PROVISIONER_REPLICAS: "2"
+  CSI_ENABLE_CEPHFS_SNAPSHOTTER: "true"
+  CSI_ENABLE_RBD_SNAPSHOTTER: "true"
+  CSI_FORCE_CEPHFS_KERNEL_CLIENT: "true"
+  CSI_RBD_FSGROUPPOLICY: "ReadWriteOnceWithFSType"
+  CSI_CEPHFS_FSGROUPPOLICY: "None"
+  ROOK_CSI_ALLOW_UNSUPPORTED_VERSION: "false"
+  ROOK_OBC_WATCH_OPERATOR_NAMESPACE: "true"
+  ROOK_ENABLE_FLEX_DRIVER: "false"
+  ROOK_ENABLE_DISCOVERY_DAEMON: "false"
+  ROOK_CEPH_COMMANDS_TIMEOUT_SECONDS: "15"
+  CSI_ENABLE_VOLUME_REPLICATION: "false"
+#  CSI_PROVISIONER_NODE_AFFINITY: "storage-node=true"
+#  AGENT_NODE_AFFINITY: "storage-node=true"
+#  DISCOVER_AGENT_NODE_AFFINITY: "storage-node=true"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rook-ceph-operator
+  namespace: rook-ceph # namespace:operator
+  labels:
+    operator: rook
+    storage-backend: ceph
+spec:
+  selector:
+    matchLabels:
+      app: rook-ceph-operator
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: rook-ceph-operator
+    spec:
+      serviceAccountName: rook-ceph-system
+      containers:
+        - name: rook-ceph-operator
+          image: rook/ceph:v1.7.8
+          args: ["ceph", "operator"]
+          volumeMounts:
+            - mountPath: /var/lib/rook
+              name: rook-config
+            - mountPath: /etc/ceph
+              name: default-config-dir
+          env:
+            - name: ROOK_CURRENT_NAMESPACE_ONLY
+              value: "false"
+            - name: ROOK_DISCOVER_DEVICES_INTERVAL
+              value: "60m"
+            - name: ROOK_HOSTPATH_REQUIRES_PRIVILEGED
+              value: "false"
+            - name: ROOK_ENABLE_SELINUX_RELABELING
+              value: "true"
+            - name: ROOK_ENABLE_FSGROUP
+              value: "true"
+            - name: ROOK_DISABLE_DEVICE_HOTPLUG
+              value: "false"
+            - name: DISCOVER_DAEMON_UDEV_BLACKLIST
+              value: "(?i)dm-[0-9]+,(?i)rbd[0-9]+,(?i)nbd[0-9]+"
+            - name: ROOK_UNREACHABLE_NODE_TOLERATION_SECONDS
+              value: "5"
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+      volumes:
+        - name: rook-config
+          emptyDir: {}
+        - name: default-config-dir
+          emptyDir: {}
+EOF
+)''')
+	shutit_session.send('''kubectl create -f <(cat << EOF
+apiVersion: ceph.rook.io/v1
+kind: CephCluster
+metadata:
+  name: rook-ceph
+  namespace: rook-ceph # namespace:cluster
+spec:
+  cephVersion:
+    image: quay.io/ceph/ceph:v16.2.6
+    allowUnsupported: false
+  dataDirHostPath: /var/lib/rook
+  skipUpgradeChecks: false
+  continueUpgradeAfterChecksEvenIfNotHealthy: false
+  waitTimeoutForHealthyOSDInMinutes: 10
+  mon:
+    count: 3
+    allowMultiplePerNode: false
+  mgr:
+    count: 1
+    modules:
+      - name: pg_autoscaler
+        enabled: true
+  dashboard:
+    enabled: true
+    ssl: true
+  monitoring:
+    enabled: false
+    rulesNamespace: rook-ceph
+  network:
+  crashCollector:
+    disable: false
+  cleanupPolicy:
+    confirmation: ""
+    sanitizeDisks:
+      method: quick
+      dataSource: zero
+      iteration: 1
+    allowUninstallWithVolumes: false
+#  placement:
+#    all:
+#      nodeAffinity:
+#        requiredDuringSchedulingIgnoredDuringExecution:
+#          nodeSelectorTerms:
+#          - matchExpressions:
+#            - key: storage-node
+#              operator: In
+#              values:
+#              - "true"
+  annotations:
+  labels:
+  resources:
+  removeOSDsIfOutAndSafeToRemove: false
+  storage: # cluster level storage configuration and selection
+    useAllNodes: true
+    useAllDevices: true
+    config:
+    onlyApplyOSDPlacement: false
+  disruptionManagement:
+    managePodBudgets: true
+    osdMaintenanceTimeout: 30
+    pgHealthCheckTimeout: 0
+    manageMachineDisruptionBudgets: false
+    machineDisruptionBudgetNamespace: openshift-machine-api
+  healthCheck:
+    daemonHealth:
+      mon:
+        disabled: false
+        interval: 45s
+      osd:
+        disabled: false
+        interval: 60s
+      status:
+        disabled: false
+        interval: 60s
+    livenessProbe:
+      mon:
+        disabled: false
+      mgr:
+        disabled: false
+      osd:
+        disabled: false
+EOF
+)''')
 	# Override security problem
 	shutit_session.send('''kubectl apply -f <(cat << EOF
 apiVersion: v1

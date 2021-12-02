@@ -7,6 +7,9 @@ def run(shutit_sessions, machines):
 	shutit_session.send('kubectl label node machine6 storage-node=true')
 	shutit_session.send('git clone --single-branch --branch v1.7.8 https://github.com/rook/rook.git')
 	shutit_session.send('cd rook/cluster/examples')
+	shutit_session.send('helm repo add rook-release https://charts.rook.io/release')
+	shutit_session.send('helm install --create-namespace --namespace rook-ceph rook-ceph rook-release/rook-ceph')
+	shutit_session.pause_point('works with skipping...')
 	shutit_session.send('kubectl create -f kubernetes/ceph/crds.yaml -f kubernetes/ceph/common.yaml')
 	shutit_session.send('''kubectl create -f <(cat << EOF
 kind: ConfigMap

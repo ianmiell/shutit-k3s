@@ -10,98 +10,6 @@ def run(shutit_sessions, machines):
 	shutit_session.send('helm repo add rook-release https://charts.rook.io/release')
 	shutit_session.send('helm install --create-namespace --namespace rook-ceph rook-ceph rook-release/rook-ceph')
 	shutit_session.pause_point('works with skipping...')
-	shutit_session.send('kubectl create -f kubernetes/ceph/crds.yaml -f kubernetes/ceph/common.yaml')
-	shutit_session.send('''kubectl create -f <(cat << EOF
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: rook-ceph-operator-config
-  namespace: rook-ceph # namespace:operator
-data:
-  ROOK_LOG_LEVEL: "INFO"
-  ROOK_CSI_ENABLE_CEPHFS: "true"
-  ROOK_CSI_ENABLE_RBD: "true"
-  ROOK_CSI_ENABLE_GRPC_METRICS: "false"
-  CSI_PROVISIONER_REPLICAS: "2"
-  CSI_ENABLE_CEPHFS_SNAPSHOTTER: "true"
-  CSI_ENABLE_RBD_SNAPSHOTTER: "true"
-  CSI_FORCE_CEPHFS_KERNEL_CLIENT: "true"
-  CSI_RBD_FSGROUPPOLICY: "ReadWriteOnceWithFSType"
-  CSI_CEPHFS_FSGROUPPOLICY: "None"
-  ROOK_CSI_ALLOW_UNSUPPORTED_VERSION: "false"
-  ROOK_OBC_WATCH_OPERATOR_NAMESPACE: "true"
-  ROOK_ENABLE_FLEX_DRIVER: "false"
-  ROOK_ENABLE_DISCOVERY_DAEMON: "false"
-  ROOK_CEPH_COMMANDS_TIMEOUT_SECONDS: "15"
-  CSI_ENABLE_VOLUME_REPLICATION: "false"
-#  CSI_PROVISIONER_NODE_AFFINITY: "storage-node=true"
-#  AGENT_NODE_AFFINITY: "storage-node=true"
-#  DISCOVER_AGENT_NODE_AFFINITY: "storage-node=true"
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: rook-ceph-operator
-  namespace: rook-ceph # namespace:operator
-  labels:
-    operator: rook
-    storage-backend: ceph
-spec:
-  selector:
-    matchLabels:
-      app: rook-ceph-operator
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: rook-ceph-operator
-    spec:
-      serviceAccountName: rook-ceph-system
-      containers:
-        - name: rook-ceph-operator
-          image: rook/ceph:v1.7.8
-          args: ["ceph", "operator"]
-          volumeMounts:
-            - mountPath: /var/lib/rook
-              name: rook-config
-            - mountPath: /etc/ceph
-              name: default-config-dir
-          env:
-            - name: ROOK_CURRENT_NAMESPACE_ONLY
-              value: "false"
-            - name: ROOK_DISCOVER_DEVICES_INTERVAL
-              value: "60m"
-            - name: ROOK_HOSTPATH_REQUIRES_PRIVILEGED
-              value: "false"
-            - name: ROOK_ENABLE_SELINUX_RELABELING
-              value: "true"
-            - name: ROOK_ENABLE_FSGROUP
-              value: "true"
-            - name: ROOK_DISABLE_DEVICE_HOTPLUG
-              value: "false"
-            - name: DISCOVER_DAEMON_UDEV_BLACKLIST
-              value: "(?i)dm-[0-9]+,(?i)rbd[0-9]+,(?i)nbd[0-9]+"
-            - name: ROOK_UNREACHABLE_NODE_TOLERATION_SECONDS
-              value: "5"
-            - name: NODE_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-      volumes:
-        - name: rook-config
-          emptyDir: {}
-        - name: default-config-dir
-          emptyDir: {}
-EOF
-)''')
 	shutit_session.send('''kubectl create -f <(cat << EOF
 apiVersion: ceph.rook.io/v1
 kind: CephCluster
@@ -185,19 +93,19 @@ spec:
         disabled: false
 EOF
 )''')
-	# Override security problem
-	shutit_session.send('''kubectl apply -f <(cat << EOF
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: rook-config-override
-  namespace: rook-ceph
-data:
-  config: |
-    [mon]
-    mon_warn_on_insecure_global_id_reclaim_allowed = false
-EOF
-)''')
+#	# Override security problem
+#	shutit_session.send('''kubectl apply -f <(cat << EOF
+#apiVersion: v1
+#kind: ConfigMap
+#metadata:
+#  name: rook-config-override
+#  namespace: rook-ceph
+#data:
+#  config: |
+#    [mon]
+#    mon_warn_on_insecure_global_id_reclaim_allowed = false
+#EOF
+#)''')
 	shutit_session.send_until("kubectl get cephcluster -n rook-ceph -o json | jq '.items[0].status.phase'", '"Ready"', cadence=30)
 	# Create the toolbox
 	shutit_session.send('''kubectl create -f <(cat << EOF

@@ -50,12 +50,14 @@ def run(shutit_sessions, machines):
 	import crossplane
 	import ingress
 	import kube_monkey
+	import mutating_webhook
 	import rook
 	import shell_operator
 	#istio_in_action.run(shutit_sessions, machines)
 	#crossplane.run(shutit_sessions, machines)
 	#ingress.run(shutit_sessions, machines)
 	#kube_monkey.run(shutit_sessions, machines)
+	#mutating_webhook.run(shutit_sessions, machines)
 	#rook.run(shutit_sessions, machines)
 	#shell_operator.run(shutit_sessions, machines)
 	shutit_session.pause_point('END OF ALL MODULES')

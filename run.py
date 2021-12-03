@@ -48,12 +48,14 @@ def run(shutit_sessions, machines):
 	shutit_session.send('rm helm-*gz')
 	import istio_in_action
 	import crossplane
+	import ingress
 	import kube_monkey
 	import rook
 	import shell_operator
 	#istio_in_action.run(shutit_sessions, machines)
 	#crossplane.run(shutit_sessions, machines)
+	#ingress.run(shutit_sessions, machines)
 	#kube_monkey.run(shutit_sessions, machines)
-	rook.run(shutit_sessions, machines)
+	#rook.run(shutit_sessions, machines)
 	#shell_operator.run(shutit_sessions, machines)
 	shutit_session.pause_point('END OF ALL MODULES')

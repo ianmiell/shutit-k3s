@@ -24,7 +24,7 @@ def run(shutit_sessions, machines):
 	for machine in ('machine2','machine3'):
 		shutit_session = shutit_sessions[machine]
 		machine_ip = machines[machine]['ip']
-		shutit_session.send('''curl -sfL http://get.k3s.io | INSTALL_K3S_EXEC="server --flannel-iface enp0s8 --no-deploy traefik --server https://machine1:6443 --token ''' + k3s_token + ''' --tls-san $(hostname) --bind-address ''' + machine_ip + ''' --advertise-address ''' + machine_ip + ''' --node-ip ''' + machine_ip + ''' --write-kubeconfig-mode 644" sh -''')
+		shutit_session.send('''curl -sfL http://get.k3s.io | INSTALL_K3S_EXEC="server --kube-apiserver-arg enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota,PodSecurityPolicy,NodeRestriction --flannel-iface enp0s8 --no-deploy traefik --server https://machine1:6443 --token ''' + k3s_token + ''' --tls-san $(hostname) --bind-address ''' + machine_ip + ''' --advertise-address ''' + machine_ip + ''' --node-ip ''' + machine_ip + ''' --write-kubeconfig-mode 644" sh -''')
 
 	for machine in ('machine4','machine5','machine6'):
 		shutit_session = shutit_sessions[machine]

@@ -24,7 +24,10 @@ def run(shutit_sessions, machines):
 	for machine in ('machine2','machine3'):
 		shutit_session = shutit_sessions[machine]
 		machine_ip = machines[machine]['ip']
-		shutit_session.send('''curl -sfL http://get.k3s.io | INSTALL_K3S_EXEC="server --kube-apiserver-arg enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota,PodSecurityPolicy,NodeRestriction --flannel-iface enp0s8 --no-deploy traefik --server https://machine1:6443 --token ''' + k3s_token + ''' --tls-san $(hostname) --bind-address ''' + machine_ip + ''' --advertise-address ''' + machine_ip + ''' --node-ip ''' + machine_ip + ''' --write-kubeconfig-mode 644" sh -''')
+		# Full list of plugins
+		#enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota,PodSecurityPolicy,NodeRestriction
+		# Took PodSecurityPolicy out at it inhibited other things from running, we might want to re-enable later.
+		shutit_session.send('''curl -sfL http://get.k3s.io | INSTALL_K3S_EXEC="server --kube-apiserver-arg enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota,NodeRestriction --flannel-iface enp0s8 --no-deploy traefik --server https://machine1:6443 --token ''' + k3s_token + ''' --tls-san $(hostname) --bind-address ''' + machine_ip + ''' --advertise-address ''' + machine_ip + ''' --node-ip ''' + machine_ip + ''' --write-kubeconfig-mode 644" sh -''')
 
 	for machine in ('machine4','machine5','machine6'):
 		shutit_session = shutit_sessions[machine]
@@ -51,6 +54,7 @@ def run(shutit_sessions, machines):
 	import ingress
 	import istio_in_action
 	import kube_monkey
+	import kubevirt
 	import mutating_webhook
 	import rook
 	import shell_operator
@@ -59,6 +63,7 @@ def run(shutit_sessions, machines):
 	#crossplane.run(shutit_sessions, machines)
 	#ingress.run(shutit_sessions, machines)
 	#kube_monkey.run(shutit_sessions, machines)
+	#kubevirt.run(shutit_sessions, machines)
 	#mutating_webhook.run(shutit_sessions, machines)
 	#rook.run(shutit_sessions, machines)
 	#shell_operator.run(shutit_sessions, machines)

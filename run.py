@@ -75,7 +75,7 @@ def run(shutit_sessions, machines):
 	#crossplane.run(shutit_sessions, machines)
 	#ingress.run(shutit_sessions, machines)
 	#kube_monkey.run(shutit_sessions, machines)
-	kubevirt.run(shutit_sessions, machines)
+	#kubevirt.run(shutit_sessions, machines)
 	#mutating_webhook.run(shutit_sessions, machines)
 	#rook.run(shutit_sessions, machines)
 	#shell_operator.run(shutit_sessions, machines)

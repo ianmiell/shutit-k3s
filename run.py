@@ -51,7 +51,7 @@ def run(shutit_sessions, machines):
 	shutit_session.send('rm helm-*gz')
 
 	# Install krew
-	shutit_session.send('''(
+	shutit_session.send(r'''(
   set -x; cd "$(mktemp -d)" &&
   OS="$(uname | tr '[:upper:]' '[:lower:]')" &&
   ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" &&
@@ -61,7 +61,7 @@ def run(shutit_sessions, machines):
   ./"${KREW}" install krew
 )''')
 	shutit_session.send('export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"')
-	shutit_session.send("""echo 'export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"' >> ~/.bashrc'""")
+	shutit_session.send("""echo 'export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"' >> ~/.bashrc""")
 
 	import istio_in_action
 	import crossplane

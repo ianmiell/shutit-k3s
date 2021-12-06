@@ -61,7 +61,7 @@ def run(shutit_sessions, machines):
   ./"${KREW}" install krew
 )''')
 	shutit_session.send('export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"')
-	shutit_session.send("""echo 'export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"' >> ~/.bashrc'""")
+	shutit_session.send("""echo 'export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"' >> ~/.bashrc""")
 
 	import istio_in_action
 	import crossplane

@@ -49,6 +49,20 @@ def run(shutit_sessions, machines):
 	shutit_session.send('tar -zxvf helm-v3.7.1-linux-amd64.tar.gz')
 	shutit_session.send('mv ./linux-amd64/helm /usr/bin')
 	shutit_session.send('rm helm-*gz')
+
+	# Install krew
+	shutit_session.send('''(
+  set -x; cd "$(mktemp -d)" &&
+  OS="$(uname | tr '[:upper:]' '[:lower:]')" &&
+  ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" &&
+  KREW="krew-${OS}_${ARCH}" &&
+  curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" &&
+  tar zxvf "${KREW}.tar.gz" &&
+  ./"${KREW}" install krew
+)''')
+	shutit_session.send('export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"')
+	shutit_session.send("""echo 'export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"' >> ~/.bashrc'""")
+
 	import istio_in_action
 	import crossplane
 	import ingress

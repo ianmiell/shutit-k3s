@@ -3,7 +3,7 @@ def run(shutit_sessions, machines):
 	shutit_session.send('export RELEASE=v0.35.0')
 	shutit_session.send('kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/${RELEASE}/kubevirt-operator.yaml   # Deploy the KubeVirt operator')
 	shutit_session.send('kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/${RELEASE}/kubevirt-cr.yaml # Create the KubeVirt CR (instance deployment request) which triggers the actual installation')
-	shutit_session.send('kubectl -n kubevirt wait kv kubevirt --for condition=Available  # wait until all KubeVirt components are up')
+	shutit_session.send_until('kubectl -n kubevirt wait kv kubevirt --for condition=Available  # wait until all KubeVirt components are up', 'condition met')
 	shutit_session.send('kubectl krew install virt')
 	shutit_session.send('''kubectl create -f <(cat << EOF
 apiVersion: kubevirt.io/v1alpha3

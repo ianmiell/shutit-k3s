@@ -66,6 +66,7 @@ def run(shutit_sessions, machines):
 	import istio_in_action
 	import crossplane
 	import ingress
+	import istio_egress
 	import kube_monkey
 	import kubevirt
 	import mutating_webhook
@@ -73,7 +74,8 @@ def run(shutit_sessions, machines):
 	import shell_operator
 	#istio_in_action.run(shutit_sessions, machines)
 	#crossplane.run(shutit_sessions, machines)
-	ingress.run(shutit_sessions, machines)
+	#ingress.run(shutit_sessions, machines)
+	istio_egress.run(shutit_sessions, machines)
 	#kube_monkey.run(shutit_sessions, machines)
 	#kubevirt.run(shutit_sessions, machines)
 	#mutating_webhook.run(shutit_sessions, machines)

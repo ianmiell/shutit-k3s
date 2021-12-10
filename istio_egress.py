@@ -31,10 +31,9 @@ def run(shutit_sessions, machines):
 	# Label the default namespace for istio injection
 	shutit_session.send("kubectl get istiooperator example-istiocontrolplane -n istio-system -o jsonpath='{.spec.meshConfig.outboundTrafficPolicy.mode}'  # get the outbound traffic policy")
 	shutit_session.send('kubectl label namespace default istio-injection=enabled')
-	shutit_session.send('sleep 60  # wait for things to settle down')
 	shutit_session.send('kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.12/samples/sleep/sleep.yaml')
+	shutit_session.send('sleep 60  # wait for things to settle down')
 	shutit_session.send('export SOURCE_POD=$(kubectl get pod -l app=sleep -o jsonpath={.items..metadata.name})')
-	shutit_session.step_through()
 	shutit_session.send('kubectl exec "$SOURCE_POD" -c sleep -- curl -sSI https://www.google.com 2>&1', 'exit code 35', note='Check that we cannot go out to google')
 	shutit_session.send('''kubectl create -f <(cat << EOF
 apiVersion: networking.istio.io/v1alpha3

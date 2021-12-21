@@ -12,7 +12,7 @@ def run(shutit_sessions, machines):
 	# Set up Istio control plane
 	# Block by default (meshConfig)
 	# Set up egress gateway
-	shutit_session.send(('cat <<EOF | kubectl apply -f -\n'
+	shutit_session.send(('cat > istio-operator.yaml <<EOF\n'
 	                     'apiVersion: install.istio.io/v1alpha1\n'
 	                     'kind: IstioOperator\n'
 	                     'metadata:\n'
@@ -28,13 +28,16 @@ def run(shutit_sessions, machines):
 	                     '    outboundTrafficPolicy:\n'
 	                     '      mode: REGISTRY_ONLY\n'
 	                     'EOF'))
+	shutit_session.send('kubectl apply -f istio-operator.yaml')
 	# Label the default namespace for istio injection
 	shutit_session.send("kubectl get istiooperator example-istiocontrolplane -n istio-system -o jsonpath='{.spec.meshConfig.outboundTrafficPolicy.mode}'  # get the outbound traffic policy")
 	shutit_session.send('kubectl label namespace default istio-injection=enabled')
+	shutit_session.send('sleep 180', note='Wait for istio to install')
 	shutit_session.send('kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.12/samples/sleep/sleep.yaml')
-	shutit_session.send('sleep 60  # wait for things to settle down')
+	shutit_session.send('sleep 100', note='Wait for sleep to install')
 	shutit_session.send('export SOURCE_POD=$(kubectl get pod -l app=sleep -o jsonpath={.items..metadata.name})')
 	shutit_session.send('kubectl exec "$SOURCE_POD" -c sleep -- curl -sSI https://www.google.com 2>&1', 'exit code 35', note='Check that we cannot go out to google')
+	shutit_session.send('sleep 1', note='Wait a second after exec')
 	shutit_session.send('''kubectl create -f <(cat << EOF
 apiVersion: networking.istio.io/v1alpha3
 kind: ServiceEntry
@@ -53,7 +56,9 @@ EOF
 )''', note='Create a serviceentry that goes out through the sidecar direct to the outside world to google only')
 	# Check that we can go out to google and not to bbc
 	shutit_session.send('kubectl exec "$SOURCE_POD" -c sleep -- curl -sSI https://www.google.com', note='Now go to google')
+	shutit_session.send('sleep 1', note='Wait a second after exec')
 	shutit_session.send('kubectl exec "$SOURCE_POD" -c sleep -- curl -sSI https://www.bbc.co.uk 2>&1', 'exit code 35', note='But we still cannot go to the bbc')
+	shutit_session.send('sleep 1', note='Wait a second after exec')
 	# Use wildcard. Note that resolution needs to be NONE for wildcard
 	shutit_session.send('''kubectl apply -f <(cat << EOF
 apiVersion: networking.istio.io/v1alpha3
@@ -73,7 +78,9 @@ EOF
 )''', note='Do a wildcard serviceentry, which requires resolution: NONE')
 	# Check that we can go out to google and to bbc
 	shutit_session.send('kubectl exec "$SOURCE_POD" -c sleep -- curl -sSI https://www.google.com', note='Check we can go to google')
+	shutit_session.send('sleep 1', note='Wait a second after exec')
 	shutit_session.send('kubectl exec "$SOURCE_POD" -c sleep -- curl -sSI https://www.bbc.co.uk', note='Check we can go to bbc too')
+	shutit_session.send('sleep 1', note='Wait a second after exec')
 	# Delete service entry
 	shutit_session.send('kubectl delete serviceentry se-example', note='Delete service entry')
 	# Create service entry for just cnn
@@ -95,6 +102,7 @@ spec:
   resolution: DNS
 EOF''', note='Create service entry for edition.cnn.com')
 	shutit_session.send('kubectl exec "$SOURCE_POD" -c sleep -- curl -sSL -o /dev/null -D - http://edition.cnn.com/politics', note='We should be able to go there')
+	shutit_session.send('sleep 1', note='Wait a second after exec')
 	shutit_session.send('''kubectl apply -f - <<EOF
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
@@ -156,6 +164,7 @@ spec:
 EOF''', note='Set up VirtualService to direct traffic from the sidecars to the egress gateway to the external service')
 	# Should still work
 	shutit_session.send('kubectl exec "$SOURCE_POD" -c sleep -- curl -sSL -o /dev/null -D - http://edition.cnn.com/politics', note='This should still work')
+	shutit_session.send('sleep 1', note='Wait a second after exec')
 	# Should show up in logs
 	shutit_session.send('kubectl logs -l istio=egressgateway -c istio-proxy -n istio-system | tail', note='We should see politics in the egress logs, showing it has gone through the egress')
 	# Should show up in logs

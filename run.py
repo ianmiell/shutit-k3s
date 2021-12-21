@@ -64,6 +64,7 @@ def run(shutit_sessions, machines):
 	shutit_session.send("""echo 'export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"' >> ~/.bashrc""")
 
 	import istio_in_action
+	import cis
 	import crossplane
 	import ingress
 	import istio_egress
@@ -74,6 +75,7 @@ def run(shutit_sessions, machines):
 	import rook
 	import shell_operator
 	#istio_in_action.run(shutit_sessions, machines)
+	cis.run(shutit_sessions, machines)
 	#crossplane.run(shutit_sessions, machines)
 	#ingress.run(shutit_sessions, machines)
 	#istio_egress.run(shutit_sessions, machines)

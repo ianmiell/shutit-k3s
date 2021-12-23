@@ -170,11 +170,3 @@ EOF''', note='Set up VirtualService to direct traffic from the sidecars to the e
 	# Should show up in logs
 	shutit_session.send('kubectl logs -l istio=egressgateway -c istio-proxy -n istio-system | grep politics')
 	shutit_session.pause_point('')
-=======
-	                     'EOF'))
-	# Label the default namespace for istio injection
-	shutit_session.send('kubectl label namespace default istio-injection=enabled')
-	shutit_session.send('kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.12/samples/sleep/sleep.yaml')
-	shutit_session.send('export SOURCE_POD=$(kubectl get pod -l app=sleep -o jsonpath={.items..metadata.name})')
-	shutit_session.send('')
->>>>>>> d9c2eaf... name

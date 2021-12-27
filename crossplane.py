@@ -1,22 +1,24 @@
 def run(shutit_sessions, machines):
 	shutit_session = shutit_sessions['machine1']
+	# Set up env
+	shutit_session.send_host_file('SERVICE_ACCOUNT_KEY_DOWNLOADED.json','gcp.json')
+	shutit_session.send_host_file('aws.sh','aws.sh')
+	shutit_session.send(r'export BASE64ENCODED_AWS_ACCOUNT_CREDS=$(cat aws.sh | base64  | tr -d "\n")')
+	shutit_session.send('cat aws.sh >> ~/.bashrc')
 	# Set up crossplane
-	shutit_session.send('gcp.json','SERVICE_ACCOUNT_KEY_DOWNLOADED.json')
-	shutit_session.pause_point('gcp file?')
 	shutit_session.send('kubectl create namespace crossplane-system')
 	shutit_session.send('helm repo add crossplane-stable https://charts.crossplane.io/stable')
 	shutit_session.send('helm repo update')
 	shutit_session.send('helm install crossplane --namespace crossplane-system crossplane-stable/crossplane')
 	shutit_session.send('curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh')
 	shutit_session.send('mv kubectl-crossplane /usr/local/bin')
-	aws_access_key_id = shutit_session.get_input('input aws_access_key_id: ')
-	aws_secret_access_key = shutit_session.get_input('input aws_secret_access_key: ')
 	shutit_session.send('kubectl rollout -n crossplane-system status deployment/crossplane')
 	shutit_session.send('kubectl rollout -n crossplane-system status deployment/crossplane-rbac-manager')
 	shutit_session.send('kubectl crossplane install provider crossplane/provider-aws:v0.19.1')
+	shutit_session.send('kubectl crossplane install provider crossplane/provider-gcp:v0.19.0')
 	shutit_session.send('sleep 60')
     # TODO: $ watch kubectl get all -n crossplane-system
-	shutit_session.send(r'export BASE64ENCODED_AWS_ACCOUNT_CREDS=$(echo -e "[default]\naws_access_key_id = ' + aws_access_key_id + r'\naws_secret_access_key = ' + aws_secret_access_key + '" | base64  | tr -d "\n")')
+	shutit_session.send('env')
 	shutit_session.send('''cat > provider-config.yaml <<EOF
 ---
 apiVersion: v1
@@ -67,9 +69,54 @@ spec:
     name: aws-provider-config  # we need to reference the config that we created before
 EOF''')
 	shutit_session.send('kubectl apply -f s3-example.yaml')
-	shutit_session.send_until('kubectl get bucket --no-headers','.*True.*')
+	shutit_session.send_until('kubectl get bucket.s3.aws.crossplane.io --no-headers','.*True.*')
 	shutit_session.send('kubectl delete -f s3-example.yaml')
 	# Part 1.2
-	shutit_session.send('kubectl crossplane install provider crossplane/provider-gcp:v0.19.0')
 	shutit_session.send('export BASE64ENCODED_GCP_PROVIDER_CREDS=$(base64 ~/SERVICE_ACCOUNT_KEY_DOWNLOADED.json | tr -d "\n")')
-	shutit_session.pause_point('kubectl get all -n crossplane-system')
+	shutit_session.send('''cat > provider-config-gcp.yaml <<EOF
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gcp-account-creds
+  namespace: crossplane-system
+type: Opaque
+data:
+  credentials: ${BASE64ENCODED_GCP_PROVIDER_CREDS}
+---
+apiVersion: gcp.crossplane.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: gcp-provider-config
+spec:
+  projectID: crossplane-336411
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: gcp-account-creds
+      key: credentials
+EOF''')
+	shutit_session.send('kubectl apply -f provider-config-gcp.yaml')
+	shutit_session.send('''cat > gcs-example.yaml <<EOF
+---
+apiVersion: storage.gcp.crossplane.io/v1alpha3
+kind: Bucket
+metadata:
+  name: gcs-example-0242ac130002x # try a new unique name
+  annotations:
+    crossplane.io/external-name: gcs-example-0242ac130002
+  labels:
+    name: gcs-example-0242ac130002x
+spec:
+  labels:
+    name: gcs-example-12312312ax    # need to be lowercase for gcp
+    environment: example
+    owner: someowner
+  providerConfigRef:
+    name: gcp-provider-config  # we need to reference the config that we created before
+EOF''')
+	shutit_session.send('kubectl apply -f gcs-example.yaml')
+	shutit_session.send_until('kubectl get buckets.storage.gcp.crossplane.io --no-headers','.*True.*')
+	shutit_session.send('kubectl delete -f gcs-example.yaml')
+	shutit_session.pause_point('1.2 DONE')

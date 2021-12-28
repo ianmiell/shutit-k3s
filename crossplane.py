@@ -119,4 +119,133 @@ EOF''')
 	shutit_session.send('kubectl apply -f gcs-example.yaml')
 	shutit_session.send_until('kubectl get buckets.storage.gcp.crossplane.io --no-headers','.*True.*')
 	shutit_session.send('kubectl delete -f gcs-example.yaml')
-	shutit_session.pause_point('1.2 DONE')
+	# 1.3
+	shutit_session.send('''cat > generic-storage-xrd.yml <<EOF
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: clusterstorages.example.org
+spec:
+  group: example.org
+  names:
+    kind: ClusterStorage
+    plural: clusterstorages
+  claimNames:
+    kind: Storage
+    plural: storages
+  versions:
+  - name: v1alpha1
+    served: true
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              parameters:
+                type: object
+                properties:
+                  name:
+                    type: string
+                required:
+                  - name
+            required:
+              - parameters
+EOF''')
+	shutit_session.send('kubectl apply -f generic-storage-xrd.yml')
+	if shutit_session.send_and_get_output('kubectl get crds | grep "storages.example" | wc -l') != '2':
+		shutit_pause_point('Wrong number of storages.examples')
+	shutit_session.send('''cat > clustergenericstorages-composition-gcp.yaml <<EOF
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+name: clusterstorages.gcp.example.org
+labels:
+    provider: gcp
+    environment: dev
+spec:
+compositeTypeRef:
+    apiVersion: example.org/v1alpha1
+    kind: ClusterStorage
+resources:
+    - name: bucket
+    base:
+        apiVersion: storage.gcp.crossplane.io/v1alpha3
+        kind: Bucket
+        spec:
+        bucketPolicyOnly:
+            enabled: true
+        defaultEventBasedHold: false
+        deletionPolicy: "Delete"
+        labels:
+            environment: example
+            owner: someowner
+        providerConfigRef:
+            name: gcp-provider-config
+    patches:
+        - fromFieldPath: "spec.parameters.name"
+        toFieldPath: "metadata.name"
+        - fromFieldPath: "spec.parameters.name"
+        toFieldPath: "spec.labels.name"
+EOF''')
+	shutit_session.send('kubectl apply -f clustergenericstorages-composition-gcp.yaml')
+	shutit_session.send('''cat > generic-storage.yaml <<EOF
+apiVersion: example.org/v1alpha1
+kind: Storage
+metadata:
+name: my-bucket-13jk123j
+namespace: default
+spec:
+parameters:
+    name: my-bucket-13jk123j
+compositionSelector:
+    matchLabels:
+    provider: gcp
+EOF''')
+	shutit_session.send_until('kubectl get buckets.storage.gcp.crossplane.io --no-headers','.*True.*')
+	shutit_session.send('''cat > clustergenericstorages-composition-aws.yaml <<EOF
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+name: clusterstorages.gcp.example.org
+labels:
+  provider: gcp
+  environment: dev
+spec:
+compositeTypeRef:
+  apiVersion: example.org/v1alpha1
+  kind: ClusterStorage
+resources:
+  - name: bucket
+  base:
+    apiVersion: storage.gcp.crossplane.io/v1alpha3
+    kind: Bucket
+    spec:
+    bucketPolicyOnly:
+      enabled: true
+    defaultEventBasedHold: false
+    deletionPolicy: "Delete"
+    labels:
+      environment: example
+      owner: someowner
+    providerConfigRef:
+      name: gcp-provider-config
+  patches:
+    - fromFieldPath: "spec.parameters.name"
+    toFieldPath: "metadata.name"
+    - fromFieldPath: "spec.parameters.name"
+    toFieldPath: "spec.labels.name"
+EOF''')
+	shutit_session.send('kubectl apply -f clustergenericstorages-composition-gcp.yaml')
+	shutit_session.send('kubectl delete -f generic-storage.yaml')
+	shutit_session.send('sed -i "s|provider: [^ ]*|provider: aws|g" generic-storage.yaml')
+	shutit_session.send('cat generic-storage.yaml # you can check the file to see if it is really changed to aws')
+	shutit_session.send('kubectl apply -f generic-storage.yaml')
+	shutit_session.send_until('kubectl get buckets.s3.aws.crossplane.io --no-headers','.*True.*')
+	shutit_session.send('kubectl delete -f generic-storage.yaml')
+	shutit_session.send('sed -i "s|provider: [^ ]*|enviroment: dev|g" generic-storage.yaml')
+	shutit_session.send('cat generic-storage.yaml # you can check the file to see if it is really changed to aws')
+	shutit_session.send('kubectl apply -f generic-storage.yaml')
+	shutit_session.pause_point('1.3 DONE check there is only one bucket')

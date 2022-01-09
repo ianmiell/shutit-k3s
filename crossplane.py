@@ -4,7 +4,7 @@ def run(shutit_sessions, machines):
 	shutit_session.send_host_file('SERVICE_ACCOUNT_KEY_DOWNLOADED.json','gcp.json')
 	shutit_session.send_host_file('aws.sh','aws.sh')
 	shutit_session.send(r'export BASE64ENCODED_AWS_ACCOUNT_CREDS=$(cat aws.sh | base64  | tr -d "\n")')
-	shutit_session.send('cat aws.sh >> ~/.bashrc')
+	#shutit_session.send('cat aws.sh >> ~/.bashrc')
 	# Set up crossplane
 	shutit_session.send('kubectl create namespace crossplane-system')
 	shutit_session.send('helm repo add crossplane-stable https://charts.crossplane.io/stable')
@@ -17,8 +17,6 @@ def run(shutit_sessions, machines):
 	shutit_session.send('kubectl crossplane install provider crossplane/provider-aws:v0.19.1')
 	shutit_session.send('kubectl crossplane install provider crossplane/provider-gcp:v0.19.0')
 	shutit_session.send('sleep 60')
-    # TODO: $ watch kubectl get all -n crossplane-system
-	shutit_session.send('env')
 	shutit_session.send('''cat > provider-config.yaml <<EOF
 ---
 apiVersion: v1
@@ -68,10 +66,10 @@ spec:
   providerConfigRef:
     name: aws-provider-config  # we need to reference the config that we created before
 EOF''')
-	shutit_session.send('kubectl apply -f s3-example.yaml')
-	shutit_session.send_until('kubectl get bucket.s3.aws.crossplane.io --no-headers','.*True.*')
-	shutit_session.send('kubectl delete -f s3-example.yaml')
-	# Part 1.2
+#	shutit_session.send('kubectl apply -f s3-example.yaml')
+#	shutit_session.send_until('kubectl get bucket.s3.aws.crossplane.io --no-headers','.*True.*')
+#	shutit_session.send('kubectl delete -f s3-example.yaml')
+#	# Part 1.2
 	shutit_session.send('export BASE64ENCODED_GCP_PROVIDER_CREDS=$(base64 ~/SERVICE_ACCOUNT_KEY_DOWNLOADED.json | tr -d "\n")')
 	shutit_session.send('''cat > provider-config-gcp.yaml <<EOF
 ---
@@ -98,28 +96,29 @@ spec:
       key: credentials
 EOF''')
 	shutit_session.send('kubectl apply -f provider-config-gcp.yaml')
-	shutit_session.send('''cat > gcs-example.yaml <<EOF
----
-apiVersion: storage.gcp.crossplane.io/v1alpha3
-kind: Bucket
-metadata:
-  name: gcs-example-0242ac130002x # try a new unique name
-  annotations:
-    crossplane.io/external-name: gcs-example-0242ac130002
-  labels:
-    name: gcs-example-0242ac130002x
-spec:
-  labels:
-    name: gcs-example-12312312ax    # need to be lowercase for gcp
-    environment: example
-    owner: someowner
-  providerConfigRef:
-    name: gcp-provider-config  # we need to reference the config that we created before
-EOF''')
-	shutit_session.send('kubectl apply -f gcs-example.yaml')
-	shutit_session.send_until('kubectl get buckets.storage.gcp.crossplane.io --no-headers','.*True.*')
-	shutit_session.send('kubectl delete -f gcs-example.yaml')
+#	shutit_session.send('''cat > gcs-example.yaml <<EOF
+#---
+#apiVersion: storage.gcp.crossplane.io/v1alpha3
+#kind: Bucket
+#metadata:
+#  name: gcs-example-0242ac130002x # try a new unique name
+#  annotations:
+#    crossplane.io/external-name: gcs-example-0242ac130002
+#  labels:
+#    name: gcs-example-0242ac130002x
+#spec:
+#  labels:
+#    name: gcs-example-12312312ax    # need to be lowercase for gcp
+#    environment: example
+#    owner: someowner
+#  providerConfigRef:
+#    name: gcp-provider-config  # we need to reference the config that we created before
+#EOF''')
+#	shutit_session.send('kubectl apply -f gcs-example.yaml')
+#	shutit_session.send_until('kubectl get buckets.storage.gcp.crossplane.io --no-headers','.*True.*')
+#	shutit_session.send('kubectl delete -f gcs-example.yaml')
 	# 1.3
+	shutit_session.pause_point('Go from here')
 	shutit_session.send('''cat > generic-storage-xrd.yml <<EOF
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
@@ -156,87 +155,91 @@ spec:
 EOF''')
 	shutit_session.send('kubectl apply -f generic-storage-xrd.yml')
 	if shutit_session.send_and_get_output('kubectl get crds | grep "storages.example" | wc -l') != '2':
-		shutit_pause_point('Wrong number of storages.examples')
+		shutit_session.pause_point('Wrong number of storages.examples')
 	shutit_session.send('''cat > clustergenericstorages-composition-gcp.yaml <<EOF
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-name: clusterstorages.gcp.example.org
-labels:
+  name: clusterstorages.gcp.example.org
+  labels:
     provider: gcp
     environment: dev
 spec:
-compositeTypeRef:
+  compositeTypeRef:
     apiVersion: example.org/v1alpha1
     kind: ClusterStorage
-resources:
+  resources:
     - name: bucket
-    base:
+      base:
         apiVersion: storage.gcp.crossplane.io/v1alpha3
         kind: Bucket
         spec:
-        bucketPolicyOnly:
+          bucketPolicyOnly:
             enabled: true
-        defaultEventBasedHold: false
-        deletionPolicy: "Delete"
-        labels:
+          defaultEventBasedHold: false
+          deletionPolicy: "Delete"
+          labels:
             environment: example
             owner: someowner
-        providerConfigRef:
+          providerConfigRef:
             name: gcp-provider-config
-    patches:
+      patches:
         - fromFieldPath: "spec.parameters.name"
-        toFieldPath: "metadata.name"
+          toFieldPath: "metadata.name"
         - fromFieldPath: "spec.parameters.name"
-        toFieldPath: "spec.labels.name"
+          toFieldPath: "spec.labels.name"
 EOF''')
 	shutit_session.send('kubectl apply -f clustergenericstorages-composition-gcp.yaml')
 	shutit_session.send('''cat > generic-storage.yaml <<EOF
 apiVersion: example.org/v1alpha1
 kind: Storage
 metadata:
-name: my-bucket-13jk123j
-namespace: default
+  name: my-bucket-13jk123j
+  namespace: default
 spec:
-parameters:
+  parameters:
     name: my-bucket-13jk123j
-compositionSelector:
+  compositionSelector:
     matchLabels:
-    provider: gcp
+      environment: dev
 EOF''')
+	shutit_session.send('kubectl apply -f generic-storage.yaml')
 	shutit_session.send_until('kubectl get buckets.storage.gcp.crossplane.io --no-headers','.*True.*')
+	shutit_session.pause_point('point2')
 	shutit_session.send('''cat > clustergenericstorages-composition-aws.yaml <<EOF
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-name: clusterstorages.gcp.example.org
-labels:
-  provider: gcp
-  environment: dev
+  name: clusterstorages.aws.example.org
+  labels:
+    provider: aws
+    environment: dev
 spec:
-compositeTypeRef:
-  apiVersion: example.org/v1alpha1
-  kind: ClusterStorage
-resources:
-  - name: bucket
-  base:
-    apiVersion: storage.gcp.crossplane.io/v1alpha3
-    kind: Bucket
-    spec:
-    bucketPolicyOnly:
-      enabled: true
-    defaultEventBasedHold: false
-    deletionPolicy: "Delete"
-    labels:
-      environment: example
-      owner: someowner
-    providerConfigRef:
-      name: gcp-provider-config
-  patches:
-    - fromFieldPath: "spec.parameters.name"
-    toFieldPath: "metadata.name"
-    - fromFieldPath: "spec.parameters.name"
-    toFieldPath: "spec.labels.name"
+  compositeTypeRef:
+    apiVersion: example.org/v1alpha1
+    kind: ClusterStorage
+  resources:
+    - name: bucket
+      base:
+        apiVersion: s3.aws.crossplane.io/v1beta1
+        kind: Bucket
+        spec:
+          forProvider:
+            acl: public-read
+            locationConstraint: us-east-2
+            tagging:
+              tagSet:
+              - key: Environment
+                value: example
+              - key: Owner
+                value: SomeOwner
+          providerConfigRef:
+            name: aws-provider-config
+      patches:
+        - fromFieldPath: "spec.parameters.name"
+          toFieldPath: "metadata.name"
+        - fromFieldPath: "spec.parameters.name"
+          toFieldPath: "spec.labels.Name"
 EOF''')
 	shutit_session.send('kubectl apply -f clustergenericstorages-composition-gcp.yaml')
 	shutit_session.send('kubectl delete -f generic-storage.yaml')
@@ -245,7 +248,7 @@ EOF''')
 	shutit_session.send('kubectl apply -f generic-storage.yaml')
 	shutit_session.send_until('kubectl get buckets.s3.aws.crossplane.io --no-headers','.*True.*')
 	shutit_session.send('kubectl delete -f generic-storage.yaml')
-	shutit_session.send('sed -i "s|provider: [^ ]*|enviroment: dev|g" generic-storage.yaml')
+	shutit_session.send('sed -i "s|provider: [^ ]*|environment: dev|g" generic-storage.yaml')
 	shutit_session.send('cat generic-storage.yaml # you can check the file to see if it is really changed to aws')
 	shutit_session.send('kubectl apply -f generic-storage.yaml')
 	shutit_session.pause_point('1.3 DONE check there is only one bucket')

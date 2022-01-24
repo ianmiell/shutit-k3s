@@ -118,7 +118,6 @@ EOF''')
 #	shutit_session.send_until('kubectl get buckets.storage.gcp.crossplane.io --no-headers','.*True.*')
 #	shutit_session.send('kubectl delete -f gcs-example.yaml')
 	# 1.3
-	shutit_session.pause_point('Go from here')
 	shutit_session.send('''cat > generic-storage-xrd.yml <<EOF
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
@@ -201,11 +200,10 @@ spec:
     name: my-bucket-13jk123j
   compositionSelector:
     matchLabels:
-      environment: dev
+      provider: gcp
 EOF''')
 	shutit_session.send('kubectl apply -f generic-storage.yaml')
 	shutit_session.send_until('kubectl get buckets.storage.gcp.crossplane.io --no-headers','.*True.*')
-	shutit_session.pause_point('point2')
 	shutit_session.send('''cat > clustergenericstorages-composition-aws.yaml <<EOF
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
@@ -241,7 +239,7 @@ spec:
         - fromFieldPath: "spec.parameters.name"
           toFieldPath: "spec.labels.Name"
 EOF''')
-	shutit_session.send('kubectl apply -f clustergenericstorages-composition-gcp.yaml')
+	shutit_session.send('kubectl apply -f clustergenericstorages-composition-aws.yaml')
 	shutit_session.send('kubectl delete -f generic-storage.yaml')
 	shutit_session.send('sed -i "s|provider: [^ ]*|provider: aws|g" generic-storage.yaml')
 	shutit_session.send('cat generic-storage.yaml # you can check the file to see if it is really changed to aws')

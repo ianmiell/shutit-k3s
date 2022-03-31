@@ -63,6 +63,7 @@ def run(shutit_sessions, machines):
 	shutit_session.send('export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"')
 	shutit_session.send("""echo 'export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"' >> ~/.bashrc""")
 
+	import admission_controller
 	import istio_in_action
 	import crossplane
 	import ingress
@@ -74,6 +75,7 @@ def run(shutit_sessions, machines):
 	import mutating_webhook
 	import rook
 	import shell_operator
+	admission_controller.run(shutit_sessions, machines)
 	#crossplane.run(shutit_sessions, machines)
 	#istio_in_action.run(shutit_sessions, machines)
 	#ingress.run(shutit_sessions, machines)

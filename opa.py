@@ -1,7 +1,6 @@
 def run(shutit_sessions, machines):
 	shutit_session = shutit_sessions['machine1']
 	# https://www.openpolicyagent.org/docs/v0.12.2/kubernetes-admission-control/
-	TODO: annotate based on above page
 	# 1. (Ignored, minikube)
 	# 2. Create ns
 	shutit_session.send('kubectl create ns opa')

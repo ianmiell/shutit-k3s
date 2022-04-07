@@ -9,7 +9,7 @@ def run(shutit_sessions, machines):
 	# Set up /etc/hosts and other pre-requisties
 	for machine in sorted(machines.keys()):
 		shutit_session = shutit_sessions[machine]
-		shutit_session.send('apt update -y && apt install -y ntp jq')
+		shutit_session.send('apt update -y && apt install -y ntp jq xterm')
 		for machine_k in sorted(machines.keys()):
 			shutit_session.send('echo ' + machines[machine_k]['ip'] + ' ' + machine_k + ' ' + machines[machine_k]['fqdn'] + ' >> /etc/hosts')
 
@@ -34,8 +34,9 @@ def run(shutit_sessions, machines):
 		machine_ip = machines[machine]['ip']
 		shutit_session.send('curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent --flannel-iface enp0s8 --server https://machine1:6443 --token ' + k3s_token + ' --node-ip ' + machine_ip + '" sh -')
 
-	# Set up k9s
 	shutit_session = shutit_sessions['machine1']
+	shutit_session.send('export KUBECONFIG=/root/.kube/config')
+	# Set up k9s
 	shutit_session.send('cd /tmp')
 	shutit_session.send('wget https://github.com/derailed/k9s/releases/download/v0.24.15/k9s_Linux_x86_64.tar.gz')
 	shutit_session.send('tar -zxvf k9s_Linux_x86_64.tar.gz')

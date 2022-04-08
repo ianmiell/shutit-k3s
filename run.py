@@ -35,6 +35,7 @@ def run(shutit_sessions, machines):
 		shutit_session.send('curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent --flannel-iface enp0s8 --server https://machine1:6443 --token ' + k3s_token + ' --node-ip ' + machine_ip + '" sh -')
 
 	shutit_session = shutit_sessions['machine1']
+	shutit_session.send('echo export KUBECONFIG=/root/.kube/config >> /root/.bashrc')
 	shutit_session.send('export KUBECONFIG=/root/.kube/config')
 	# Set up k9s
 	shutit_session.send('cd /tmp')

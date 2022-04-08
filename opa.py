@@ -1,11 +1,11 @@
+OPA does not work....
+
 def run(shutit_sessions, machines):
 	shutit_session = shutit_sessions['machine1']
 	# https://www.openpolicyagent.org/docs/v0.12.2/kubernetes-admission-control/
 	# 1. (Ignored, minikube)
 	# 2. Create ns
 	shutit_session.send('kubectl create ns opa')
-	shutit_session.send('kubectl config set-context opa-tutorial --namespace opa')
-	shutit_session.send('kubectl config use-context opa-tutorial')
 	# 3. Deploy OPA on top of kubernetes
 	# Communication between Kubernetes and OPA must be secured using TLS. To configure TLS, use openssl to create a certificate authority (CA) and certificate/key pair for OPA:
 	shutit_session.send('openssl genrsa -out ca.key 2048')
@@ -26,7 +26,7 @@ EOF''')
 	shutit_session.send('openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 100000 -extensions v3_req -extfile server.conf')
 	# Note: the Common Name value you give to openssl MUST match the name of the OPA service created below.
 	# Create a Secret to store the TLS credentials for OPA:
-	shutit_session.send('kubectl create secret tls opa-server --cert=server.crt --key=server.key')
+	shutit_session.send('kubectl -n opa create secret tls opa-server --cert=server.crt --key=server.key')
 	# Next, use the file below to deploy OPA as an admission controller.
 	shutit_session.send('''cat > admission-controller.yaml << 'EOF'
 # Grant OPA/kube-mgmt read-only access to resources. This lets kube-mgmt
@@ -84,7 +84,7 @@ spec:
     port: 443
     targetPort: 443
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -160,16 +160,16 @@ data:
         reason != ""
     }
 EOF''')
-	shutit_session.send('kubectl apply -f admission-controller.yaml')
+	shutit_session.send('kubectl -n opa apply -f admission-controller.yaml')
 	# Next label kube-system and the opa namespace so that OPA does not control the resources in those namespaces.
-	shutit_session.send('kubectl label ns kube-system openpolicyagent.org/webhook=ignore')
-	shutit_session.send('kubectl label ns opa openpolicyagent.org/webhook=ignore')
+	shutit_session.send('kubectl -n opa label ns kube-system openpolicyagent.org/webhook=ignore')
+	shutit_session.send('kubectl -n opa label ns opa openpolicyagent.org/webhook=ignore')
 	# When OPA starts, the kube-mgmt container will load Kubernetes Namespace and Ingress objects into OPA. You can configure the sidecar to load any kind of Kubernetes object into OPA. The sidecar establishes watches on the Kubernetes API server so that OPA has access to an eventually consistent cache of Kubernetes objects.
 	#Next, generate the manifest that will be used to register OPA as an admission controller. This webhook will ignore any namespace with the label openpolicyagent.org/webhook=ignore.
 	# The generated configuration file includes a base64 encoded representation of the CA certificate so that TLS connections can be established between the Kubernetes API server and OPA.
 	shutit_session.send('''cat > webhook-configuration.yaml <<EOF
 kind: ValidatingWebhookConfiguration
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 metadata:
   name: opa-validating-webhook
 webhooks:
@@ -192,6 +192,6 @@ webhooks:
         name: opa
 EOF''')
 	# Finally, register OPA as an admission controller:
-	shutit_session.send('kubectl apply -f webhook-configuration.yaml')
+	shutit_session.send('kubectl -n opa apply -f webhook-configuration.yaml')
 	# You can follow the OPA logs to see the webhook requests being issued by the Kubernetes API server:
-	shutit_session.pause_point('kubectl logs -l app=opa -c opa')
+	shutit_session.pause_point('kubectl -n opa logs -l app=opa -c opa')

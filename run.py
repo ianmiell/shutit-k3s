@@ -73,6 +73,7 @@ def run(shutit_sessions, machines):
 	import keepalived_operator
 	import kube_monkey
 	import kubevirt
+	import linkerd
 	import mutating_webhook
 	import rook
 	import shell_operator
@@ -85,6 +86,7 @@ def run(shutit_sessions, machines):
 	#keepalived_operator.run(shutit_sessions, machines)
 	#kube_monkey.run(shutit_sessions, machines)
 	#kubevirt.run(shutit_sessions, machines)
+	linkerd.run(shutit_sessions, machines)
 	#mutating_webhook.run(shutit_sessions, machines)
 	#rook.run(shutit_sessions, machines)
 	#shell_operator.run(shutit_sessions, machines)

@@ -2,12 +2,14 @@ def run(shutit_sessions, machines):
 	shutit_session = shutit_sessions['machine1']
 	# https://linkerd.io/2.11/getting-started/
 	shutit_session.send('''curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install | sh''')
+	shutit_session.add_to_bashrc('export PATH=$PATH:/root/.linkerd2/bin')
+	shutit_session.send('export PATH=$PATH:/root/.linkerd2/bin')
 	shutit_session.send('linkerd version')
 	shutit_session.send('linkerd check --pre')
 	shutit_session.send('linkerd install | kubectl apply -f -')
 	shutit_session.send('linkerd check')
 	# Install emotijovo demo app
-	shutit_session.send('curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/emojivoto.yml | kubectl apply -f -')
+	shutit_session.send('''curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/emojivoto.yml | kubectl apply -f -''')
 	shutit_session.send('kubectl -n emojivoto port-forward svc/web-svc 8080:80')
 	shutit_session.send('curl localhost:8080')
 	# Mesh the app

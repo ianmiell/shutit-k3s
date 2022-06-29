@@ -88,7 +88,7 @@ def run(shutit_sessions, machines):
 	#kube_monkey.run(shutit_sessions, machines)
 	#kubevirt.run(shutit_sessions, machines)
 	#mutating_webhook.run(shutit_sessions, machines)
-	opa.run(shutit_sessions, machines)
+	#opa.run(shutit_sessions, machines)
 	#rook.run(shutit_sessions, machines)
 	#shell_operator.run(shutit_sessions, machines)
 	shutit_session.pause_point('END OF ALL MODULES')

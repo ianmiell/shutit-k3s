@@ -9,7 +9,7 @@ def run(shutit_sessions, machines):
 	# Set up /etc/hosts and other pre-requisties
 	for machine in sorted(machines.keys()):
 		shutit_session = shutit_sessions[machine]
-		shutit_session.send('apt update -y && apt install -y ntp jq xterm')
+		shutit_session.send('apt update -y && apt -qq install -y ntp jq xterm')
 		for machine_k in sorted(machines.keys()):
 			shutit_session.send('echo ' + machines[machine_k]['ip'] + ' ' + machine_k + ' ' + machines[machine_k]['fqdn'] + ' >> /etc/hosts')
 

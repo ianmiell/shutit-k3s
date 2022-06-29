@@ -2,7 +2,7 @@ def run(shutit_sessions, machines):
 	shutit_session = shutit_sessions['machine1']
 	# From: https://kubernetes.io/blog/2019/03/21/a-guide-to-kubernetes-admission-controllers/
 	shutit_session.send('git clone https://github.com/stackrox/admission-controller-webhook-demo')
-	shutit_session.send('apt -y install make golang docker.io')
+	shutit_session.send('apt -qq -y install make golang docker.io')
 	shutit_session.send('cd admission-controller-webhook-demo')
 	#shutit_session.send_file('/root/.dockerpass', 'dockerpass')
 	#shutit_session.send('docker login -u imiell -p $(cat /root/.dockerpass)')

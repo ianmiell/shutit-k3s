@@ -65,9 +65,9 @@ def run(shutit_sessions, machines):
 	shutit_session.send("""echo 'export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"' >> ~/.bashrc""")
 
 	import admission_controller
-	import istio_in_action
 	import crossplane
 	import ingress
+	import istio
 	import istio_egress
 	import istio_in_action
 	import keepalived_operator
@@ -80,6 +80,7 @@ def run(shutit_sessions, machines):
 	#crossplane.run(shutit_sessions, machines)
 	#istio_in_action.run(shutit_sessions, machines)
 	#ingress.run(shutit_sessions, machines)
+	istio.run(shutit_sessions, machines)
 	#istio_egress.run(shutit_sessions, machines)
 	#istio_in_action.run(shutit_sessions, machines)
 	#keepalived_operator.run(shutit_sessions, machines)

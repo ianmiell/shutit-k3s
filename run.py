@@ -65,6 +65,9 @@ def run(shutit_sessions, machines):
 	shutit_session.send('export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"')
 	shutit_session.send("""echo 'export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"' >> ~/.bashrc""")
 
+	# Add rancher charts stable
+	shutit_session.send('helm repo add rancher-stable https://releases.rancher.com/server-charts/stable')
+
 	import admission_controller
 	import istio_in_action
 	import crossplane

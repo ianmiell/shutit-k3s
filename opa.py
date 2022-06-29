@@ -1,5 +1,3 @@
-OPA does not work....
-
 def run(shutit_sessions, machines):
 	shutit_session = shutit_sessions['machine1']
 	# https://www.openpolicyagent.org/docs/v0.12.2/kubernetes-admission-control/
@@ -190,6 +188,8 @@ webhooks:
       service:
         namespace: opa
         name: opa
+    admissionReviewVersions: ["v1","v1beta1"]
+    sideEffects: None
 EOF''')
 	# Finally, register OPA as an admission controller:
 	shutit_session.send('kubectl -n opa apply -f webhook-configuration.yaml')

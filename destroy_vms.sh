@@ -1,5 +1,5 @@
 #!/bin/bash
-MODULE_NAME=shutit_k3s_istio
+MODULE_NAME=shutit_k3s
 rm -rf $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/vagrant_run/*
 XARGS_FLAG='--no-run-if-empty'
 if ! echo '' | xargs --no-run-if-empty >/dev/null 2>&1
@@ -10,7 +10,7 @@ if [[ $(command -v VBoxManage) != '' ]]
 then
 	while true
 	do
-		VBoxManage list runningvms | grep ${MODULE_NAME} | awk '{print $1}' | xargs $XARGS_FLAG -IXXX VBoxManage controlvm 'XXX' poweroff && VBoxManage list vms | grep shutit_k3s_istio | awk '{print $1}'  | xargs -IXXX VBoxManage unregistervm 'XXX' --delete
+		VBoxManage list runningvms | grep ${MODULE_NAME} | awk '{print $1}' | xargs $XARGS_FLAG -IXXX VBoxManage controlvm 'XXX' poweroff && VBoxManage list vms | grep shutit_k3s | awk '{print $1}'  | xargs -IXXX VBoxManage unregistervm 'XXX' --delete
 		# The xargs removes whitespace
 		if [[ $(VBoxManage list vms | grep ${MODULE_NAME} | wc -l | xargs) -eq '0' ]]
 		then

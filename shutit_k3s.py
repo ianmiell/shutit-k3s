@@ -8,7 +8,7 @@ import inspect
 import time
 from shutit_module import ShutItModule
 
-class shutit_k3s_istio(ShutItModule):
+class shutit_k3s(ShutItModule):
 
 
 	def build(self, shutit):
@@ -17,7 +17,7 @@ class shutit_k3s_istio(ShutItModule):
 		gui = shutit.cfg[self.module_id]['gui']
 		memory = shutit.cfg[self.module_id]['memory']
 		shutit.build['vagrant_run_dir'] = os.path.dirname(os.path.abspath(inspect.getsourcefile(lambda:0))) + '/vagrant_run'
-		shutit.build['module_name'] = 'shutit_k3s_istio_' + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6))
+		shutit.build['module_name'] = 'shutit_k3s_' + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6))
 		shutit.build['this_vagrant_run_dir'] = shutit.build['vagrant_run_dir'] + '/' + shutit.build['module_name']
 		shutit.send(' command rm -rf ' + shutit.build['this_vagrant_run_dir'] + ' && command mkdir -p ' + shutit.build['this_vagrant_run_dir'] + ' && command cd ' + shutit.build['this_vagrant_run_dir'])
 		shutit.send('command rm -rf ' + shutit.build['this_vagrant_run_dir'] + ' && command mkdir -p ' + shutit.build['this_vagrant_run_dir'] + ' && command cd ' + shutit.build['this_vagrant_run_dir'])
@@ -41,7 +41,7 @@ class shutit_k3s_istio(ShutItModule):
         vb.customize ['createhd', '--size', 50 * 1024, '--filename', file_to_disk]
       end
       vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
-      vb.name = "shutit_k3s_istio_1"
+      vb.name = "shutit_k3s_1"
       vb.memory = 24576
       vb.cpus = 3
     end
@@ -57,7 +57,7 @@ class shutit_k3s_istio(ShutItModule):
         vb.customize ['createhd', '--size', 50 * 1024, '--filename', file_to_disk]
       end
       vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
-      vb.name = "shutit_k3s_istio_2"
+      vb.name = "shutit_k3s_2"
       vb.memory = 24576
       vb.cpus = 3
     end
@@ -73,7 +73,7 @@ class shutit_k3s_istio(ShutItModule):
         vb.customize ['createhd', '--size', 50 * 1024, '--filename', file_to_disk]
       end
       vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
-      vb.name = "shutit_k3s_istio_3"
+      vb.name = "shutit_k3s_3"
       vb.memory = 24576
       vb.cpus = 3
     end
@@ -89,7 +89,7 @@ class shutit_k3s_istio(ShutItModule):
         vb.customize ['createhd', '--size', 50 * 1024, '--filename', file_to_disk]
       end
       vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
-      vb.name = "shutit_k3s_istio_4"
+      vb.name = "shutit_k3s_4"
       vb.memory = 24576
       vb.cpus = 3
     end
@@ -99,7 +99,7 @@ class shutit_k3s_istio(ShutItModule):
     machine5.vm.hostname = "machine5.vagrant.test"
     machine5.vm.disk :disk, name: "rook", size: "51200"
     machine5.vm.provider :virtualbox do |vb|
-      vb.name = "shutit_k3s_istio_5"
+      vb.name = "shutit_k3s_5"
       vb.memory = 24576
       vb.cpus = 3
       # https://github.com/hashicorp/vagrant/issues/9794
@@ -115,7 +115,7 @@ class shutit_k3s_istio(ShutItModule):
     machine6.vm.hostname = "machine6.vagrant.test"
     machine6.vm.disk :disk, name: "rook", size: "51200"
     machine6.vm.provider :virtualbox do |vb|
-      vb.name = "shutit_k3s_istio_6"
+      vb.name = "shutit_k3s_6"
       vb.memory = 24576
       vb.cpus = 3
       # https://github.com/hashicorp/vagrant/issues/9794
@@ -235,8 +235,8 @@ echo "
 		return True
 
 def module():
-	return shutit_k3s_istio(
-		'shutit-k3s.shutit_k3s_istio.shutit_k3s_istio', 1498611222.0001,
+	return shutit_k3s(
+		'shutit-k3s.shutit_k3s.shutit_k3s', 1498611222.0001,
 		description='',
 		maintainer='',
 		delivery_methods=['bash'],

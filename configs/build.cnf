@@ -7,5 +7,5 @@
 ###############################################################################
 # When this module is the one being built, which modules should be built along with it by default?
 # This feeds into automated testing of each module.
-[shutit-k3s.shutit_k3s_istio.shutit_k3s_istio]
+[shutit-k3s.shutit_k3s.shutit_k3s]
 shutit.core.module.build:yes

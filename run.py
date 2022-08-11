@@ -69,6 +69,7 @@ def run(shutit_sessions, machines):
 	shutit_session.send('helm repo add rancher-stable https://releases.rancher.com/server-charts/stable')
 
 	import admission_controller
+	import ansible_operator
 	import istio_in_action
 	import crossplane
 	import ingress
@@ -82,6 +83,7 @@ def run(shutit_sessions, machines):
 	import rook
 	import shell_operator
 	#admission_controller.run(shutit_sessions, machines)
+	ansible_operator.run(shutit_sessions, machines)
 	#crossplane.run(shutit_sessions, machines)
 	#istio_in_action.run(shutit_sessions, machines)
 	#ingress.run(shutit_sessions, machines)

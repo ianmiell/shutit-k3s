@@ -80,6 +80,7 @@ def run(shutit_sessions, machines):
 	import kubebuilder
 	import mutating_webhook
 	import opa
+	import python_operator
 	import rook
 	import shell_operator
 	#admission_controller.run(shutit_sessions, machines)
@@ -94,6 +95,7 @@ def run(shutit_sessions, machines):
 	#kubebuilder.run(shutit_sessions, machines)
 	#mutating_webhook.run(shutit_sessions, machines)
 	#opa.run(shutit_sessions, machines)
+	python_operator.run(shutit_sessions, machines)
 	#rook.run(shutit_sessions, machines)
 	#shell_operator.run(shutit_sessions, machines)
 	shutit_session.pause_point('END OF ALL MODULES')

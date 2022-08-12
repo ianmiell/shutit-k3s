@@ -91,7 +91,7 @@ def run(shutit_sessions, machines):
 	#keepalived_operator.run(shutit_sessions, machines)
 	#kube_monkey.run(shutit_sessions, machines)
 	#kubevirt.run(shutit_sessions, machines)
-	kubebuilder.run(shutit_sessions, machines)
+	#kubebuilder.run(shutit_sessions, machines)
 	#mutating_webhook.run(shutit_sessions, machines)
 	#opa.run(shutit_sessions, machines)
 	#rook.run(shutit_sessions, machines)

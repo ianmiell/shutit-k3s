@@ -69,7 +69,6 @@ def run(shutit_sessions, machines):
 	shutit_session.send('helm repo add rancher-stable https://releases.rancher.com/server-charts/stable')
 
 	import admission_controller
-	import ansible_operator
 	import istio_in_action
 	import crossplane
 	import ingress
@@ -80,10 +79,10 @@ def run(shutit_sessions, machines):
 	import kubevirt
 	import mutating_webhook
 	import opa
+	import operator_sdk
 	import rook
 	import shell_operator
 	#admission_controller.run(shutit_sessions, machines)
-	ansible_operator.run(shutit_sessions, machines)
 	#crossplane.run(shutit_sessions, machines)
 	#istio_in_action.run(shutit_sessions, machines)
 	#ingress.run(shutit_sessions, machines)
@@ -94,6 +93,7 @@ def run(shutit_sessions, machines):
 	#kubevirt.run(shutit_sessions, machines)
 	#mutating_webhook.run(shutit_sessions, machines)
 	#opa.run(shutit_sessions, machines)
+	operator_sdk.run(shutit_sessions, machines)
 	#rook.run(shutit_sessions, machines)
 	#shell_operator.run(shutit_sessions, machines)
 	shutit_session.pause_point('END OF ALL MODULES')

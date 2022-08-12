@@ -61,14 +61,16 @@ def delete(body, **kwargs):
     return {'message': msg}
 EOF''')
 	# DONE OUTSIDE
-#	shutit_session.send('''cat > Dockerfile << EOF
-#FROM python:3.7
-#RUN pip install kopf && pip install kubernetes
-#COPY operator_handler.py /operator_handler.py
-#CMD kopf run --standalone /operator_handler.py
-#EOF''')
-	# docker image build -t imiell/operator-grafana:latest .
-	# docker image push imiell/operator-grafana:latest
+	shutit_session.send('apt install -u docker.io')
+	shutit_session.send('docker login -p dockeristhelord -u imiell')
+	shutit_session.send('''cat > Dockerfile << EOF
+FROM python:3.7
+RUN pip install kopf && pip install kubernetes
+COPY operator_handler.py /operator_handler.py
+CMD kopf run --standalone /operator_handler.py
+EOF''')
+	shutit_session.send('docker image build -t imiell/operator-grafana:latest .')
+	shutit_session.send('docker image push imiell/operator-grafana:latest')
 	shutit_session.send('''cat > service_account.yml << EOF
 apiVersion: v1
 kind: ServiceAccount
@@ -111,6 +113,5 @@ spec:
           name: grafana-operator
 EOF''')
 	shutit_session.send('kubectl apply -f grafana_operator.yml')
-
 	shutit_session.pause_point('continue with https://www.opcito.com/blogs/implementing-kubernetes-operators-with-python')
 

@@ -71,6 +71,7 @@ def run(shutit_sessions, machines):
 	import admission_controller
 	import istio_in_action
 	import crossplane
+	import harbor
 	import ingress
 	import istio_egress
 	import istio_in_action
@@ -84,6 +85,7 @@ def run(shutit_sessions, machines):
 	import shell_operator
 	#admission_controller.run(shutit_sessions, machines)
 	#crossplane.run(shutit_sessions, machines)
+	harbor.run(shutit_sessions, machines)
 	#istio_in_action.run(shutit_sessions, machines)
 	#ingress.run(shutit_sessions, machines)
 	#istio_egress.run(shutit_sessions, machines)
